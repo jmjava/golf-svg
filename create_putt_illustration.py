@@ -800,23 +800,25 @@ class SVGRenderer:
         opacity = min(0.5 + abs(elevation_percent) * 0.15, 0.95)
         
         if elevation_percent > 0:
-            # Uphill: green slopes UP from ball to hole, arrow points UP (toward hole)
-            marker = "url(#arrowhead-elev-up)"
+            # Uphill: slope rises toward hole, arrows point DOWN (away from hole)
+            # Shows gravity pulling back toward ball
+            marker = "url(#arrowhead-elev-down)"
             color = C.ELEV_UPHILL
             for y_mid in range(140, int(self.height - 80), spacing):
                 indicators.append(
-                    f'<line x1="{x_pos}" y1="{y_mid + tri_size}" x2="{x_pos}" y2="{y_mid}" '
+                    f'<line x1="{x_pos}" y1="{y_mid}" x2="{x_pos}" y2="{y_mid + tri_size}" '
                     f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
                     f'marker-end="{marker}" />'
                 )
             label = f"▲ {abs(elevation_percent):.1f}%"
         elif elevation_percent < 0:
-            # Downhill: green slopes DOWN from hole to ball, arrow points DOWN (toward ball)
-            marker = "url(#arrowhead-elev-down)"
+            # Downhill: slope descends toward hole, arrows point UP (toward hole)
+            # Shows ball rolling downhill toward hole
+            marker = "url(#arrowhead-elev-up)"
             color = C.ELEV_DOWNHILL
             for y_mid in range(140, int(self.height - 80), spacing):
                 indicators.append(
-                    f'<line x1="{x_pos}" y1="{y_mid}" x2="{x_pos}" y2="{y_mid + tri_size}" '
+                    f'<line x1="{x_pos}" y1="{y_mid + tri_size}" x2="{x_pos}" y2="{y_mid}" '
                     f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
                     f'marker-end="{marker}" />'
                 )

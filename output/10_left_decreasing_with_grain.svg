@@ -99,10 +99,10 @@
     <line x1="60.0" y1="580" x2="60.0" y2="565" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
     
     <!-- Visual elevation direction indicators (uphill/downhill) -->
-    <line x1="40.0" y1="140" x2="40.0" y2="150" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="260" x2="40.0" y2="270" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="380" x2="40.0" y2="390" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="500" x2="40.0" y2="510" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-down)" />
+    <line x1="40.0" y1="150" x2="40.0" y2="140" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-up)" />
+    <line x1="40.0" y1="270" x2="40.0" y2="260" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-up)" />
+    <line x1="40.0" y1="390" x2="40.0" y2="380" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-up)" />
+    <line x1="40.0" y1="510" x2="40.0" y2="500" stroke="#4FC3F7" stroke-width="1.5" opacity="0.62" marker-end="url(#arrowhead-elev-up)" />
     <text x="40.0" y="125" font-family="Arial, sans-serif" font-size="6" fill="#4FC3F7" text-anchor="middle" font-weight="bold" opacity="0.9">▼ 0.8%</text>
     
     <!-- Target line (straight line to hole) -->
