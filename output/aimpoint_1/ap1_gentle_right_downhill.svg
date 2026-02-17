@@ -58,6 +58,8 @@
         </marker>
         
         <!-- Elevation direction markers (distinct from grain) -->
+        <!-- Uphill: points UP (toward hole, showing green slopes up) -->
+        <!-- Downhill: points DOWN (toward ball, showing green slopes down) -->
         <marker id="arrowhead-elev-up" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="0">
             <polygon points="4,0 8,8 0,8" fill="#FFA726" opacity="0.85" />
         </marker>

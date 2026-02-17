@@ -800,7 +800,7 @@ class SVGRenderer:
         opacity = min(0.5 + abs(elevation_percent) * 0.15, 0.95)
         
         if elevation_percent > 0:
-            # Uphill: triangles pointing UP (toward hole)
+            # Uphill: green slopes UP from ball to hole, arrow points UP (toward hole)
             marker = "url(#arrowhead-elev-up)"
             color = C.ELEV_UPHILL
             for y_mid in range(140, int(self.height - 80), spacing):
@@ -811,7 +811,7 @@ class SVGRenderer:
                 )
             label = f"▲ {abs(elevation_percent):.1f}%"
         elif elevation_percent < 0:
-            # Downhill: triangles pointing DOWN (toward ball)
+            # Downhill: green slopes DOWN from hole to ball, arrow points DOWN (toward ball)
             marker = "url(#arrowhead-elev-down)"
             color = C.ELEV_DOWNHILL
             for y_mid in range(140, int(self.height - 80), spacing):
@@ -1253,6 +1253,8 @@ class PuttIllustrationGenerator:
         </marker>
         
         <!-- Elevation direction markers (distinct from grain) -->
+        <!-- Uphill: points UP (toward hole, showing green slopes up) -->
+        <!-- Downhill: points DOWN (toward ball, showing green slopes down) -->
         <marker id="arrowhead-elev-up" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="0">
             <polygon points="4,0 8,8 0,8" fill="{C.ELEV_UPHILL}" opacity="0.85" />
         </marker>
