@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+# Break Naming Convention
+
+A putt is only "double" or "triple" when the break **actually reverses direction**.
+Changing intensity while staying the same direction does NOT qualify.
+
+## Rules
+
+- **Simple**: Break goes one direction the whole putt (even if slope % varies).
+  A break_change_point with a POSITIVE value just changes intensity — still the same direction.
+- **Double**: Break direction genuinely **reverses once** (e.g. R→L).
+  Requires a break_change_point with a NEGATIVE value that is **large enough** to produce
+  a visible direction change in the section display. A tiny -0.3 reversal inside a 5.0% slope
+  is NOT a real reversal — the dominant direction never actually changes.
+- **Triple**: Break direction genuinely **reverses twice** (e.g. R→L→R).
+  Each reversal must be large enough to be visible in the section display.
+
+## What Counts as a "Real" Reversal
+
+The reversal slope must be **at least 40-50%** of the initial slope magnitude to produce
+a meaningful, visible direction change. Examples:
+
+- 2.0% right → -1.5% (left) at 5ft ✅ Real double (reversal is 75% of initial)
+- 5.0% right → -0.3% (left) at 7ft ❌ NOT a double (reversal is only 6% of initial)
+- 3.0% right → -2.0% (left) at 4ft → 1.5% (right) at 7ft ✅ Real triple
+
+## File Naming
+
+- `07_right_increasing…` — same direction, varying intensity (NOT double)
+- `12_double_right_to_left…` — direction actually reverses
+- `ap3_triple_right_left_right` — direction reverses twice with meaningful slopes
+
+Referenced in [create_putt_illustration.py](mdc:create_putt_illustration.py).
