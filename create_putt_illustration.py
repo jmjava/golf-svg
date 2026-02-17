@@ -39,7 +39,7 @@ class LayoutConfig:
     """
     width: int = 120
     height: int = 660
-    text_column_width: int = 200
+    text_column_width: int = 300
     putt_length_ft: float = 10.0
     margin: int = 30  # Top/bottom margin for ball and hole positions
     
@@ -1034,6 +1034,24 @@ class SVGRenderer:
             y, svgs = body_wrap(y, tip, color=C.WHITE, size=8)
             parts.extend(svgs)
         
+        # ═══ SEEING GRAIN (sunglasses technique) ═══
+        y += 4
+        y, t = heading(y, "SEEING GRAIN:")
+        parts.append(t)
+        
+        grain_vis_text = (
+            "Use adjustable-tint sunglasses to read grain. "
+            "Start at medium tint behind the ball and slowly "
+            "darken the lens until the shiny (with-grain) areas "
+            "pop against the dark (against-grain) areas. "
+            "Check from multiple angles and inspect the hole "
+            "edge - the ragged/burned lip shows the grain "
+            "direction. Bermuda greens show the strongest grain; "
+            "bent grass is subtler but visible in afternoon light."
+        )
+        y, svgs = body_wrap(y, grain_vis_text, color=C.LIGHT_GRAY, size=8)
+        parts.extend(svgs)
+        
         return '\n    '.join(parts)
     
     def _wrap_text(self, text: str, max_width: int, font_size: int) -> List[str]:
@@ -1095,7 +1113,7 @@ class PuttIllustrationGenerator:
     # Trajectory pixel margin
     PATH_MARGIN_PX = 10  # Keep putt path within green bounds
     
-    def __init__(self, width: int = 120, height: int = 660, text_column_width: int = 200):
+    def __init__(self, width: int = 120, height: int = 660, text_column_width: int = 300):
         self.layout = LayoutConfig(width=width, height=height, text_column_width=text_column_width)
         self.renderer = SVGRenderer(self.layout)
     
@@ -1754,7 +1772,7 @@ def _log_scenario_header(prefix, idx, total, filename, params):
 
 def main():
     """Generate comprehensive set of realistic 10ft putt scenarios."""
-    generator = PuttIllustrationGenerator(width=120, height=660, text_column_width=200)
+    generator = PuttIllustrationGenerator(width=120, height=660, text_column_width=300)
     
     output_dir = Path(__file__).parent / "output"
     

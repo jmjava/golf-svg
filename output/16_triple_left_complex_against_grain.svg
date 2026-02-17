@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="320" height="660" xmlns="http://www.w3.org/2000/svg">
+<svg width="420" height="660" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <!-- Base green gradient -->
         <linearGradient id="baseGreen" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -193,8 +193,8 @@
     <text x="60.0" y="645" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF" text-anchor="middle" font-weight="bold" opacity="0.95">START (BALL)</text>
     
     <!-- Right column for explanation text -->
-    <rect x="120" y="0" width="200" height="660" fill="#1A1A1A" opacity="0.95" />
-    <rect x="123" y="3" width="194" height="654" fill="#000000" opacity="0.9" rx="4" stroke="#FFD700" stroke-width="2" />
+    <rect x="120" y="0" width="300" height="660" fill="#1A1A1A" opacity="0.95" />
+    <rect x="123" y="3" width="294" height="654" fill="#000000" opacity="0.9" rx="4" stroke="#FFD700" stroke-width="2" />
     <text x="128" y="22" font-family="Arial, sans-serif" font-size="12" fill="#FFD700" font-weight="bold">AIMPOINT ANALYSIS</text>
     <text x="128" y="44" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Slope (adj): 2.0%  |  Dir: R->L</text>
     <text x="128" y="59" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">AimPoint: 2 fingers (R->L break)</text>
@@ -208,33 +208,31 @@
     <text x="128" y="185" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 3: 1.5% R to L</text>
     <text x="134" y="200" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Hole section (6.6-10ft): 1.5% R to L slope</text>
     <text x="128" y="217" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">GRAIN &amp; BREAK:</text>
-    <text x="132" y="236" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">AGAINST grain the ball rolls slower and</text>
-    <text x="132" y="250" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">looks dark/dull (you are looking into the</text>
-    <text x="132" y="264" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">blades). The ball loses speed faster so</text>
-    <text x="132" y="278" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">the slope pulls it sideways sooner. Break</text>
-    <text x="132" y="292" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">happens throughout the entire putt, not</text>
-    <text x="132" y="306" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">just at the end. Hit FIRMER to maintain</text>
-    <text x="132" y="320" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">speed and play LESS break than the slope</text>
-    <text x="132" y="334" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">suggests.</text>
-    <text x="128" y="352" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">AIMPOINT FEEL:</text>
-    <text x="132" y="371" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Stand at the midpoint facing the hole.</text>
-    <text x="132" y="385" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">You will feel clear pressure on your LEFT</text>
-    <text x="132" y="399" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">foot (moderate tilt). High side: right.</text>
-    <text x="132" y="413" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Ball falls to the left.</text>
-    <text x="132" y="427" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Lean FORWARD slightly (2.0% downhill). Hit</text>
-    <text x="132" y="441" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">softer - ball breaks more because it moves</text>
-    <text x="132" y="455" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">slower across the slope.</text>
-    <text x="128" y="473" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">ELEVATION &amp; BREAK:</text>
-    <text x="132" y="492" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Downhill 2.0% means MORE break. You hit softer</text>
-    <text x="132" y="506" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">so the ball rolls slower across the side</text>
-    <text x="132" y="520" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">slope, giving gravity more time to pull it</text>
-    <text x="132" y="534" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">sideways. This 1.8% slope plays as 2.0%</text>
-    <text x="132" y="548" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">effective (vs 1.8% on flat).</text>
-    <text x="128" y="566" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">QUICK TIPS:</text>
-    <text x="132" y="585" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">1. Feel the slope with your feet at the</text>
-    <text x="132" y="599" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">midpoint.</text>
-    <text x="132" y="613" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">2. Aim 2 fingers to the right (high side).</text>
-    <text x="132" y="627" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">3. Against grain: hit firmer, less total</text>
-    <text x="132" y="641" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">break.</text>
-    <text x="132" y="655" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">4. Watch for break changes (marked on green)!</text>
+    <text x="132" y="236" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">AGAINST grain the ball rolls slower and looks dark/dull (you are</text>
+    <text x="132" y="250" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">looking into the blades). The ball loses speed faster so the</text>
+    <text x="132" y="264" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">slope pulls it sideways sooner. Break happens throughout the</text>
+    <text x="132" y="278" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">entire putt, not just at the end. Hit FIRMER to maintain speed</text>
+    <text x="132" y="292" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">and play LESS break than the slope suggests.</text>
+    <text x="128" y="310" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">AIMPOINT FEEL:</text>
+    <text x="132" y="329" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Stand at the midpoint facing the hole. You will feel clear</text>
+    <text x="132" y="343" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">pressure on your LEFT foot (moderate tilt). High side: right.</text>
+    <text x="132" y="357" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Ball falls to the left.</text>
+    <text x="132" y="371" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Lean FORWARD slightly (2.0% downhill). Hit softer - ball breaks more</text>
+    <text x="132" y="385" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">because it moves slower across the slope.</text>
+    <text x="128" y="403" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">ELEVATION &amp; BREAK:</text>
+    <text x="132" y="422" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Downhill 2.0% means MORE break. You hit softer so the ball rolls slower</text>
+    <text x="132" y="436" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">across the side slope, giving gravity more time to pull it sideways. This</text>
+    <text x="132" y="450" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">1.8% slope plays as 2.0% effective (vs 1.8% on flat).</text>
+    <text x="128" y="468" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">QUICK TIPS:</text>
+    <text x="132" y="487" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">1. Feel the slope with your feet at the midpoint.</text>
+    <text x="132" y="501" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">2. Aim 2 fingers to the right (high side).</text>
+    <text x="132" y="515" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">3. Against grain: hit firmer, less total break.</text>
+    <text x="132" y="529" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">4. Watch for break changes (marked on green)!</text>
+    <text x="128" y="547" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">SEEING GRAIN:</text>
+    <text x="132" y="566" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Use adjustable-tint sunglasses to read grain. Start at medium tint behind</text>
+    <text x="132" y="580" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">the ball and slowly darken the lens until the shiny (with-grain) areas</text>
+    <text x="132" y="594" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">pop against the dark (against-grain) areas. Check from multiple angles</text>
+    <text x="132" y="608" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">and inspect the hole edge - the ragged/burned lip shows the grain</text>
+    <text x="132" y="622" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">direction. Bermuda greens show the strongest grain; bent grass is subtler</text>
+    <text x="132" y="636" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">but visible in afternoon light.</text>
 </svg>
