@@ -1626,27 +1626,37 @@ AIMPOINT_2_SCENARIOS = [
         "slope_percent": 2.0, "break_change_points": [(5.0, 2.3)],
         "description": "AimPoint 2: Left consistent 2.0->2.3%, gentle uphill"
     }),
-    # Double breaks (direction GENUINELY reverses once — reversal slope ≥40% of initial)
-    ("ap2_double_right_to_left", {
+    # Double breaks — LATE reversal so dominant direction keeps AimPoint ~2
+    ("ap2_double_right_to_left_late", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
-        "slope_percent": 3.0, "break_change_points": [(5.0, -2.0)], "ridge_putt": True,
-        "description": "AimPoint 2: Double R 3% -> L 2% at 5ft, flat"
+        "slope_percent": 3.0, "break_change_points": [(7.0, -1.5)], "ridge_putt": True,
+        "description": "AimPoint 2: Double R 3% -> L 1.5% at 7ft, flat"
     }),
-    ("ap2_double_left_to_right", {
-        "with_grain": True, "elevation_percent": -1.5, "break_direction": "left",
-        "slope_percent": 2.8, "break_change_points": [(5.0, -1.8)], "ridge_putt": True,
-        "description": "AimPoint 2: Double L 2.8% -> R 1.8% at 5ft, 1.5% downhill"
+    ("ap2_double_left_to_right_late", {
+        "with_grain": False, "elevation_percent": -1.0, "break_direction": "left",
+        "slope_percent": 2.8, "break_change_points": [(7.0, -1.5)], "ridge_putt": True,
+        "description": "AimPoint 2: Double L 2.8% -> R 1.5% at 7ft, 1% downhill"
     }),
-    # Triple breaks (direction GENUINELY reverses twice — each reversal is meaningful)
+    ("ap2_double_right_to_left_strong", {
+        "with_grain": True, "elevation_percent": -0.5, "break_direction": "right",
+        "slope_percent": 3.5, "break_change_points": [(7.5, -2.0)], "ridge_putt": True,
+        "description": "AimPoint 2: Double R 3.5% -> L 2% at 7.5ft, slight downhill"
+    }),
+    ("ap2_double_left_to_right_strong", {
+        "with_grain": False, "elevation_percent": 0.0, "break_direction": "left",
+        "slope_percent": 3.2, "break_change_points": [(7.5, -2.0)], "ridge_putt": True,
+        "description": "AimPoint 2: Double L 3.2% -> R 2% at 7.5ft, flat"
+    }),
+    # Triple breaks — late second reversal keeps dominant direction AimPoint ~2
     ("ap2_triple_right_left_right", {
         "with_grain": True, "elevation_percent": 1.0, "break_direction": "right",
-        "slope_percent": 3.0, "break_change_points": [(3.5, -2.0), (7.0, 2.5)], "ridge_putt": True,
-        "description": "AimPoint 2: Triple R 3% -> L 2% -> R 2.5%, 1% uphill"
+        "slope_percent": 3.0, "break_change_points": [(5.0, -1.5), (8.0, 2.0)], "ridge_putt": True,
+        "description": "AimPoint 2: Triple R 3% -> L 1.5% at 5ft -> R 2% at 8ft, 1% uphill"
     }),
     ("ap2_triple_left_right_left", {
         "with_grain": True, "elevation_percent": -0.5, "break_direction": "left",
-        "slope_percent": 2.8, "break_change_points": [(3.5, -2.0), (7.0, 2.2)], "ridge_putt": True,
-        "description": "AimPoint 2: Triple L 2.8% -> R 2% -> L 2.2%, slight downhill"
+        "slope_percent": 2.8, "break_change_points": [(5.0, -1.5), (8.0, 2.0)], "ridge_putt": True,
+        "description": "AimPoint 2: Triple L 2.8% -> R 1.5% at 5ft -> L 2% at 8ft, slight downhill"
     }),
 ]
 
@@ -1679,27 +1689,37 @@ AIMPOINT_3_SCENARIOS = [
         "slope_percent": 3.0, "break_change_points": [(5.0, 3.5)],
         "description": "AimPoint 3: Left heavy 3->3.5%, gentle uphill"
     }),
-    # Double breaks (direction GENUINELY reverses once — reversal slope ≥40% of initial)
+    # Double breaks — LATE reversal so dominant direction keeps AimPoint ~3
     ("ap3_double_right_to_left", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
-        "slope_percent": 4.0, "break_change_points": [(5.0, -3.0)], "ridge_putt": True,
-        "description": "AimPoint 3: Double R 4% -> L 3% at 5ft, flat"
+        "slope_percent": 4.5, "break_change_points": [(7.5, -2.5)], "ridge_putt": True,
+        "description": "AimPoint 3: Double R 4.5% -> L 2.5% at 7.5ft, flat"
     }),
     ("ap3_double_left_to_right", {
         "with_grain": True, "elevation_percent": -2.0, "break_direction": "left",
-        "slope_percent": 4.5, "break_change_points": [(6.0, -2.5)], "ridge_putt": True,
-        "description": "AimPoint 3: Double L 4.5% -> R 2.5% at 6ft, 2% downhill"
+        "slope_percent": 5.0, "break_change_points": [(7.5, -3.0)], "ridge_putt": True,
+        "description": "AimPoint 3: Double L 5% -> R 3% at 7.5ft, 2% downhill"
     }),
-    # Triple breaks (direction GENUINELY reverses twice — each reversal is meaningful)
+    ("ap3_double_right_to_left_downhill", {
+        "with_grain": False, "elevation_percent": -1.5, "break_direction": "right",
+        "slope_percent": 4.0, "break_change_points": [(8.0, -2.0)], "ridge_putt": True,
+        "description": "AimPoint 3: Double R 4% -> L 2% at 8ft, 1.5% downhill"
+    }),
+    ("ap3_double_left_to_right_uphill", {
+        "with_grain": True, "elevation_percent": 1.5, "break_direction": "left",
+        "slope_percent": 4.5, "break_change_points": [(8.0, -2.5)], "ridge_putt": True,
+        "description": "AimPoint 3: Double L 4.5% -> R 2.5% at 8ft, 1.5% uphill"
+    }),
+    # Triple breaks — late second reversal keeps dominant direction AimPoint ~3
     ("ap3_triple_right_left_right", {
         "with_grain": True, "elevation_percent": 1.2, "break_direction": "right",
-        "slope_percent": 4.0, "break_change_points": [(3.5, -3.0), (7.0, 3.5)], "ridge_putt": True,
-        "description": "AimPoint 3: Triple R 4% -> L 3% -> R 3.5%, 1.2% uphill"
+        "slope_percent": 4.5, "break_change_points": [(6.0, -2.5), (8.5, 3.0)], "ridge_putt": True,
+        "description": "AimPoint 3: Triple R 4.5% -> L 2.5% at 6ft -> R 3% at 8.5ft, 1.2% uphill"
     }),
     ("ap3_triple_left_right_left", {
         "with_grain": True, "elevation_percent": -0.8, "break_direction": "left",
-        "slope_percent": 4.5, "break_change_points": [(3.5, -3.0), (7.0, 3.0)], "ridge_putt": True,
-        "description": "AimPoint 3: Triple L 4.5% -> R 3% -> L 3%, slight downhill"
+        "slope_percent": 5.0, "break_change_points": [(6.0, -3.0), (8.5, 3.5)], "ridge_putt": True,
+        "description": "AimPoint 3: Triple L 5% -> R 3% at 6ft -> L 3.5% at 8.5ft, slight downhill"
     }),
     # Varying intensity (same direction — NOT triple)
     ("ap3_right_aggressive", {

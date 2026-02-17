@@ -20,25 +20,25 @@
             <stop offset="100%" style="stop-color:#689F38;stop-opacity:0.15" />
         </linearGradient>
         <linearGradient id="breakGradientSec1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:1.0" />
-            <stop offset="25%" style="stop-color:#689F38;stop-opacity:0.8" />
-            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.6" />
-            <stop offset="75%" style="stop-color:#AED581;stop-opacity:0.3999999999999999" />
-            <stop offset="100%" style="stop-color:#C5E1A5;stop-opacity:0.2" />
+            <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:0.79" />
+            <stop offset="25%" style="stop-color:#689F38;stop-opacity:0.681875" />
+            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.57375" />
+            <stop offset="75%" style="stop-color:#AED581;stop-opacity:0.46562500000000007" />
+            <stop offset="100%" style="stop-color:#C5E1A5;stop-opacity:0.35750000000000004" />
         </linearGradient>
         <linearGradient id="breakGradientSec2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.2" />
-            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.36000000000000004" />
-            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.6000000000000001" />
-            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:1.0" />
+            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.389" />
+            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.4608" />
+            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.5685" />
+            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.65825" />
+            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:0.748" />
         </linearGradient>
         <linearGradient id="breakGradientSec3" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.2" />
-            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.36000000000000004" />
-            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.6000000000000001" />
-            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:1.0" />
+            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.389" />
+            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.4608" />
+            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.5685" />
+            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.65825" />
+            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:0.748" />
         </linearGradient>
         <linearGradient id="holeGrainGradient" x1="50%" y1="0%" x2="50%" y2="100%">
             <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.3" />
@@ -109,7 +109,7 @@
           opacity="0.5" />
     
     <!-- Putt path (break line) -->
-    <path d="M 60.0 630.0 C 59.7 617.5, 59.5 604.6, 59.2 592.0 C 59.2 577.0, 59.1 561.5, 59.1 546.5 C 59.3 533.9, 59.5 521.0, 59.7 508.5 C 60.2 493.4, 60.8 477.9, 61.3 462.9 C 62.1 447.9, 62.9 432.4, 63.7 417.3 C 64.3 404.8, 65.0 391.9, 65.6 379.4 C 66.1 364.3, 66.6 348.8, 67.2 333.8 C 67.4 318.8, 67.7 303.3, 68.0 288.2 C 68.1 275.7, 68.2 262.8, 68.3 250.3 C 68.1 235.2, 68.0 219.7, 67.9 204.7 C 67.5 189.6, 67.2 174.2, 66.8 159.1 C 66.3 146.6, 65.9 133.7, 65.4 121.1 C 64.6 106.1, 63.8 90.6, 63.1 75.6 C 62.0 60.5, 61.0 45.0, 60.0 30.0" 
+    <path d="M 60.0 630.0 C 59.9 617.5, 59.8 604.6, 59.7 592.0 C 59.7 577.0, 59.8 561.5, 59.8 546.5 C 59.8 533.9, 59.9 521.0, 60.0 508.5 C 60.2 493.4, 60.5 477.9, 60.7 462.9 C 61.0 447.9, 61.3 432.4, 61.6 417.3 C 61.9 404.8, 62.1 391.9, 62.4 379.4 C 62.6 364.3, 62.8 348.8, 63.0 333.8 C 63.1 318.8, 63.2 303.3, 63.3 288.2 C 63.4 275.7, 63.4 262.8, 63.4 250.3 C 63.4 235.2, 63.3 219.7, 63.2 204.7 C 63.1 189.6, 63.0 174.2, 62.8 159.1 C 62.6 146.6, 62.4 133.7, 62.2 121.1 C 61.9 106.1, 61.6 90.6, 61.3 75.6 C 60.9 60.5, 60.4 45.0, 60.0 30.0" 
           stroke="#FFD700" 
           stroke-width="3" 
           fill="none" 
@@ -122,18 +122,18 @@
     <rect x="3" y="498.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="508.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 1</text>
     <rect x="33.0" y="512.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="524.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">4.0% L->R</text>
+    <text x="60.0" y="524.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">1.5% L->R</text>
     <rect x="3" y="278.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="288.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 2</text>
     <rect x="33.0" y="292.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="304.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">3.0% R->L</text>
+    <text x="60.0" y="304.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">1.2% R->L</text>
     <rect x="3" y="88.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="98.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 3</text>
     <rect x="33.0" y="102.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="114.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">3.0% R->L</text>
+    <text x="60.0" y="114.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">1.2% R->L</text>
     
     <!-- AimPoint marker - pink circle showing starting aim line (~2ft from ball) -->
-    <circle cx="59.69926327151488" 
+    <circle cx="60.03075245235969" 
             cy="522" 
             r="4" 
             fill="#FF6B6B" 
@@ -142,7 +142,7 @@
             stroke-width="1" />
     
     <!-- AimPoint marker - pink circle showing aim point near hole (same x position) -->
-    <circle cx="59.69926327151488" 
+    <circle cx="60.03075245235969" 
             cy="50" 
             r="4" 
             fill="#FF6B6B" 
@@ -191,17 +191,17 @@
     <rect x="120" y="0" width="300" height="660" fill="#1A1A1A" opacity="0.95" />
     <rect x="123" y="3" width="294" height="654" fill="#000000" opacity="0.9" rx="4" stroke="#FFD700" stroke-width="2" />
     <text x="128" y="22" font-family="Arial, sans-serif" font-size="12" fill="#FFD700" font-weight="bold">AIMPOINT ANALYSIS</text>
-    <text x="128" y="44" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Slope (adj): 0.7%  |  Dir: R->L</text>
+    <text x="128" y="44" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Slope (adj): 0.3%  |  Dir: R->L</text>
     <text x="128" y="59" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">AimPoint: 0 fingers (R->L break)</text>
     <text x="128" y="74" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Elevation: FLAT (0%)</text>
     <text x="128" y="89" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Grain: WITH (fast/shiny)</text>
     <text x="128" y="106" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">SECTION SLOPES:</text>
-    <text x="128" y="125" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 1: 4.0% L to R</text>
-    <text x="134" y="140" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Start section (0-3.3ft): 4.0% L to R slope</text>
-    <text x="128" y="155" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 2: 3.0% R to L</text>
-    <text x="134" y="170" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Middle section (3.3-6.6ft): 3.0% R to L slope</text>
-    <text x="128" y="185" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 3: 3.0% R to L</text>
-    <text x="134" y="200" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Hole section (6.6-10ft): 3.0% R to L slope</text>
+    <text x="128" y="125" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 1: 1.5% L to R</text>
+    <text x="134" y="140" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Start section (0-3.3ft): 1.5% L to R slope</text>
+    <text x="128" y="155" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 2: 1.2% R to L</text>
+    <text x="134" y="170" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Middle section (3.3-6.6ft): 1.2% R to L slope</text>
+    <text x="128" y="185" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 3: 1.2% R to L</text>
+    <text x="134" y="200" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Hole section (6.6-10ft): 1.2% R to L slope</text>
     <text x="128" y="217" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">GRAIN &amp; BREAK:</text>
     <text x="132" y="236" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">WITH grain the ball rolls faster and looks shiny (you see blade</text>
     <text x="132" y="250" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">tops reflecting light). The ball holds speed longer so it breaks</text>
@@ -214,7 +214,7 @@
     <text x="132" y="357" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">falls to the left.</text>
     <text x="132" y="371" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Level stance (flat). Normal pace - no elevation adjustment needed.</text>
     <text x="128" y="389" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">ELEVATION &amp; BREAK:</text>
-    <text x="132" y="408" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Flat putt - no elevation adjustment. The 0.7% slope plays at face value.</text>
+    <text x="132" y="408" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Flat putt - no elevation adjustment. The 0.3% slope plays at face value.</text>
     <text x="128" y="426" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">QUICK TIPS:</text>
     <text x="132" y="445" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">1. Feel the slope with your feet at the midpoint.</text>
     <text x="132" y="459" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">2. Aim 0 fingers to the right (high side).</text>
