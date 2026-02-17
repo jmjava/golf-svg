@@ -828,8 +828,8 @@ class SVGRenderer:
             color = C.MED_GRAY
             label = "FLAT"
         
-        # Label near the bottom (above ball), away from section break labels
-        label_y = self.height - 45
+        # Label just below the SEC 3 break badge (original was 125, nudged down)
+        label_y = 140
         indicators.append(
             f'<text x="{x_pos}" y="{label_y}" font-family="Arial, sans-serif" font-size="6" '
             f'fill="{color}" text-anchor="middle" font-weight="bold" opacity="0.9">{label}</text>'
