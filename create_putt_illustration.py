@@ -828,9 +828,10 @@ class SVGRenderer:
             color = C.MED_GRAY
             label = "FLAT"
         
-        # Label near the top
+        # Label near the bottom (above ball), away from section break labels
+        label_y = self.height - 45
         indicators.append(
-            f'<text x="{x_pos}" y="125" font-family="Arial, sans-serif" font-size="6" '
+            f'<text x="{x_pos}" y="{label_y}" font-family="Arial, sans-serif" font-size="6" '
             f'fill="{color}" text-anchor="middle" font-weight="bold" opacity="0.9">{label}</text>'
         )
         
