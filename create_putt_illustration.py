@@ -1,13 +1,16 @@
 """
 Generate SVG illustrations of putt conditions for green reading practice.
-Based on AimPoint green reading methodology with realistic slopes (typically 1-3%,
-up to 10% for ridge/reversal putts).
+Based on AimPoint green reading methodology with realistic putting green slopes
+(typically 1-3%, up to 5% absolute max for playable surfaces).
 Creates 120x600 pixel images with detailed annotations.
 
 Refactored to use clean physics model with scipy ODE integration.
 """
 
 import math
+import re
+import traceback
+import warnings
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional
 from pathlib import Path
@@ -103,6 +106,12 @@ class Colors:
     DARK_GRAY = "#2C2C2C"
     NEAR_BLACK = "#1A1A1A"
     BLACK = "#000000"
+
+
+# Elevation adjustment factors for effective break calculation.
+# Used by both physics display (SVGRenderer) and generation (PuttIllustrationGenerator).
+UPHILL_SLOPE_FACTOR = 0.85    # Uphill reduces effective break ~15%
+DOWNHILL_SLOPE_FACTOR = 1.15  # Downhill increases effective break ~15%
 
 
 @dataclass
@@ -207,6 +216,19 @@ class PuttingPhysics:
     - AimPoint methodology for slope reading
     """
     
+    # Visual break scaling
+    BASE_BREAK_SCALE = 40.0    # Pixels of lateral deviation per slope-percent-squared
+    UPHILL_BREAK_FACTOR = 0.8  # Uphill putts break ~20% less (ball moves faster)
+    DOWNHILL_BREAK_FACTOR = 1.2  # Downhill putts break ~20% more (ball moves slower)
+    
+    # Newton-Raphson trajectory solver
+    NR_MAX_ITERATIONS = 5       # Max iterations to find initial velocity
+    NR_CONVERGENCE_THRESHOLD = 0.1  # Acceptable final x offset (pixels)
+    NR_CORRECTION_FACTOR = 0.8  # Damping factor for velocity correction
+    
+    # Trajectory sampling
+    TRAJECTORY_POINTS = 80      # Number of points to sample along the path
+    
     def __init__(self, config: PuttConfig):
         """
         Initialize physics engine.
@@ -296,17 +318,13 @@ class PuttingPhysics:
         For ball to end at center (x=0 at t=1): v0 = -0.5*a
         """
         
-        # Scale factor for visual appearance
-        # For 1% slope: ~10px deviation, for 3% slope: ~30px deviation
-        BASE_BREAK_SCALE = 40.0  # Pixels per slope-percent-squared
-        
         # Elevation affects break amount:
-        # - Uphill: ball slows down -> less time to break -> LESS break (0.8x)
-        # - Downhill: ball speeds up then slows near hole -> MORE break (1.2x)
+        # - Uphill: ball has more speed fighting gravity -> less break
+        # - Downhill: ball is slower near hole -> more time for slope to act
         if self.config.uphill:
-            BREAK_SCALE = BASE_BREAK_SCALE * 0.8  # Less break on uphill
+            BREAK_SCALE = self.BASE_BREAK_SCALE * self.UPHILL_BREAK_FACTOR
         else:
-            BREAK_SCALE = BASE_BREAK_SCALE * 1.2  # More break on downhill
+            BREAK_SCALE = self.BASE_BREAK_SCALE * self.DOWNHILL_BREAK_FACTOR
         
         def derivatives(t_param: float, state: np.ndarray) -> np.ndarray:
             """
@@ -345,12 +363,24 @@ class PuttingPhysics:
         
         # Iterate to find v0 that lands ball at center (x=0)
         # Newton-Raphson style iteration
-        for _ in range(5):
+        converged = False
+        for _ in range(self.NR_MAX_ITERATIONS):
             final_x = simulate_with_v0(initial_velocity)
-            if abs(final_x) < 0.1:  # Close enough
+            if abs(final_x) < self.NR_CONVERGENCE_THRESHOLD:
+                converged = True
                 break
             # Adjust v0: if ball ends left (negative), need more rightward initial velocity
-            initial_velocity -= final_x * 0.8  # Correction factor
+            initial_velocity -= final_x * self.NR_CORRECTION_FACTOR
+        
+        if not converged:
+            warnings.warn(
+                f"Trajectory solver did not converge after {self.NR_MAX_ITERATIONS} "
+                f"iterations (final offset: {final_x:.2f}px). "
+                f"Slope config: {self.config.slope_percent}%, "
+                f"direction: {self.config.break_direction.value}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         
         # Initial conditions: start at center with calculated velocity toward aim
         y0 = np.array([0.0, initial_velocity])
@@ -365,7 +395,7 @@ class PuttingPhysics:
         )
         
         # Sample points evenly along the path
-        num_points = 80
+        num_points = self.TRAJECTORY_POINTS
         t_eval = np.linspace(0, 1, num_points)
         sol = solution.sol(t_eval)
         
@@ -750,9 +780,9 @@ class SVGRenderer:
         
         # Adjust for elevation: uphill = less break, downhill = more break
         if config.uphill:
-            adj_slope = avg_slope * 0.85  # Less effective break uphill
+            adj_slope = avg_slope * UPHILL_SLOPE_FACTOR
         else:
-            adj_slope = avg_slope * 1.15  # More effective break downhill
+            adj_slope = avg_slope * DOWNHILL_SLOPE_FACTOR
         
         # Direction based on NET slope (positive = L->R, negative = R->L)
         direction_str = "L->R" if net_slope >= 0 else "R->L"
@@ -872,6 +902,17 @@ class PuttIllustrationGenerator:
     Includes detailed AimPoint annotations explaining the read and break analysis.
     """
     
+    # Slope clamping range (realistic putting green limits)
+    MIN_SLOPE_PERCENT = 0.5   # Below this, break is negligible
+    MAX_SLOPE_PERCENT = 5.0   # USGA: 1-3% typical, 4% challenging, 5% absolute max
+    
+    # AimPoint finger calculation
+    PIXELS_PER_FINGER = 4.5   # 1 finger ≈ 1 inch ≈ ~4.5px (hole is ~4.25" = 18px)
+    
+    
+    # Trajectory pixel margin
+    PATH_MARGIN_PX = 10  # Keep putt path within green bounds
+    
     def __init__(self, width: int = 120, height: int = 600, text_column_width: int = 120):
         self.layout = LayoutConfig(width=width, height=height, text_column_width=text_column_width)
         self.renderer = SVGRenderer(self.layout)
@@ -891,11 +932,24 @@ class PuttIllustrationGenerator:
         if break_direction not in ["left", "right"]:
             raise ValueError("break_direction must be 'left' or 'right'")
         
-        # Clamp slope to realistic putting green range:
-        #   0.5% minimum to avoid degenerate cases
-        #   5.0% maximum — real putting greens rarely exceed 3-4%
-        #   (USGA design standards: 1-3% typical, 4% challenging, 5% absolute max)
-        slope_percent = max(0.5, min(5.0, slope_percent))
+        # Clamp slope to realistic putting green range
+        slope_percent = max(self.MIN_SLOPE_PERCENT, min(self.MAX_SLOPE_PERCENT, slope_percent))
+        
+        # Validate break_change_points
+        if break_change_points:
+            for i, (dist, slope) in enumerate(break_change_points):
+                if not (0.0 < dist < 10.0):
+                    raise ValueError(
+                        f"break_change_points[{i}]: distance {dist} must be between "
+                        f"0 and {10.0} (putt length in feet)"
+                    )
+                if abs(slope) > self.MAX_SLOPE_PERCENT:
+                    warnings.warn(
+                        f"break_change_points[{i}]: slope {slope}% exceeds realistic "
+                        f"max ({self.MAX_SLOPE_PERCENT}%), will be used as-is in sections",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
         
         # Create configuration
         config = PuttConfig(
@@ -923,15 +977,8 @@ class PuttIllustrationGenerator:
         apex_point = SVGPathGenerator.calculate_aim_point(trajectory, r.hole_y, r.center_x)
         
         # Calculate AimPoint fingers from ACTUAL aim offset
-        # 1 finger ≈ 1 inch ≈ ~4.5 pixels (hole is ~4.25" = 18px diameter)
         aim_offset_pixels = abs(apex_point[0] - r.center_x)
-        aim_fingers = int(aim_offset_pixels / 4.5 + 0.5)  # Round to nearest finger
-        
-        # Build section_slopes list for compatibility
-        section_slopes = [
-            (s.section_number, s.slope_percent, s.description())
-            for s in sections
-        ]
+        aim_fingers = int(aim_offset_pixels / self.PIXELS_PER_FINGER + 0.5)
         
         # Generate SVG
         svg = self._build_svg(config, sections, putt_path, apex_point, aim_fingers)
@@ -942,7 +989,7 @@ class PuttIllustrationGenerator:
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(svg)
         
-        return svg, section_slopes
+        return svg, sections
     
     @staticmethod
     def _trajectory_to_pixels(
@@ -958,7 +1005,7 @@ class PuttIllustrationGenerator:
         Returns:
             List of (px, py) pixel coordinates
         """
-        margin = 10  # Pixel margin to keep path within green bounds
+        margin = PuttIllustrationGenerator.PATH_MARGIN_PX
         
         points = []
         for t_param, x_offset in normalized:
@@ -1113,518 +1160,501 @@ class PuttIllustrationGenerator:
 # =============================================================================
 
 def validate_svg(svg_content: str, break_direction: str, slope_percent: float,
-                 break_change_points: List, ridge_putt: bool, section_slopes: List) -> List[str]:
+                 break_change_points: List, ridge_putt: bool,
+                 sections: List[SlopeSection]) -> List[str]:
     """
     Validate SVG against all rules. Returns list of error messages (empty if valid).
+    
+    Args:
+        svg_content: Generated SVG string
+        break_direction: Base break direction ("left" or "right")
+        slope_percent: Base slope percentage
+        break_change_points: List of (distance_ft, new_slope) changes
+        ridge_putt: Whether this is a ridge putt with direction reversals
+        sections: List of SlopeSection objects from the putt config
     """
     errors = []
     
-    # Parse section slopes
-    for section_num, section_slope, section_explanation in section_slopes:
-        abs_slope = abs(section_slope)
+    # Validate section directions
+    for section in sections:
+        expected_dir = "L to R" if section.breaks_right else "R to L"
+        desc = section.description()
         
-        # Determine expected direction
-        if ridge_putt and section_slope < 0:
-            section_breaks_right = (break_direction == "left")
-        else:
-            section_breaks_right = (break_direction == "right")
-        
-        expected_dir = "L to R" if section_breaks_right else "R to L"
-        
-        # Extract actual direction from explanation
+        # Extract actual direction from description
         actual_dir = None
-        if "L to R" in section_explanation:
+        if "L to R" in desc:
             actual_dir = "L to R"
-        elif "R to L" in section_explanation:
+        elif "R to L" in desc:
             actual_dir = "R to L"
         
         if actual_dir != expected_dir:
-            errors.append(f"Section {section_num}: Direction mismatch. Expected '{expected_dir}', got '{actual_dir}'")
+            errors.append(
+                f"Section {section.section_number}: Direction mismatch. "
+                f"Expected '{expected_dir}', got '{actual_dir}'"
+            )
     
-    # Validate path starts at ball
-    path_match = '<path d="M '
-    if path_match in svg_content:
-        path_start = svg_content.find(path_match) + len(path_match)
-        path_end = svg_content.find('"', path_start)
-        path_data = svg_content[path_start:path_end]
+    # Validate path starts at ball using XML parsing
+    from xml.etree import ElementTree as ET
+    try:
+        root = ET.fromstring(svg_content)
+        ns = {'svg': 'http://www.w3.org/2000/svg'}
         
-        parts = path_data.replace(',', ' ').split()
-        if len(parts) >= 2:
-            try:
-                path_start_x = float(parts[0])
-                path_start_y = float(parts[1])
-                
-                ball_x = 60.0  # Center
-                ball_y = 570.0  # Bottom
-                
-                if abs(path_start_x - ball_x) > 0.5:
-                    errors.append(f"Path must start at ball x={ball_x}, got {path_start_x:.1f}")
-                if abs(path_start_y - ball_y) > 0.5:
-                    errors.append(f"Path must start at ball y={ball_y}, got {path_start_y:.1f}")
-            except ValueError:
-                pass
+        # Find all <path> elements (try with and without namespace)
+        paths = root.findall('.//svg:path', ns) or root.findall('.//path')
+        
+        for path_el in paths:
+            d = path_el.get('d', '')
+            if d.startswith('M '):
+                # Parse the M (moveto) command coordinates
+                parts = d[2:].replace(',', ' ').split()
+                if len(parts) >= 2:
+                    try:
+                        path_start_x = float(parts[0])
+                        path_start_y = float(parts[1])
+                        
+                        layout = LayoutConfig()
+                        if abs(path_start_x - layout.center_x) > 0.5:
+                            errors.append(
+                                f"Path must start at ball x={layout.center_x}, "
+                                f"got {path_start_x:.1f}"
+                            )
+                        if abs(path_start_y - layout.ball_y) > 0.5:
+                            errors.append(
+                                f"Path must start at ball y={layout.ball_y}, "
+                                f"got {path_start_y:.1f}"
+                            )
+                    except ValueError:
+                        pass
+                break  # Only validate the first path (putt trajectory)
+    except ET.ParseError as e:
+        errors.append(f"SVG is not valid XML: {e}")
     
     return errors
+
+
+# =============================================================================
+# SCENARIO DATA
+# =============================================================================
+
+MAIN_SCENARIOS = [
+    # SIMPLE BREAKS
+    ("01_simple_right_with_grain_downhill", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.5, "description": "Simple right break, with grain, downhill"
+    }),
+    ("02_simple_left_against_grain_uphill", {
+        "with_grain": False, "uphill": True, "break_direction": "left",
+        "slope_percent": 1.8, "description": "Simple left break, against grain, uphill"
+    }),
+    ("03_simple_right_with_grain_flat", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.2, "description": "Simple right break, with grain, flat"
+    }),
+    ("04_simple_left_strong_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 2.5, "description": "Strong left break, against grain"
+    }),
+    ("05_simple_right_strong_with_grain_uphill", {
+        "with_grain": True, "uphill": True, "break_direction": "right",
+        "slope_percent": 2.8, "description": "Strong right break, with grain, uphill"
+    }),
+    ("06_simple_left_gentle_against_grain_downhill", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.0, "description": "Gentle left break, against grain, downhill"
+    }),
+
+    # DOUBLE BREAKS
+    ("07_double_right_increasing_with_grain", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.0, "break_change_points": [(5.0, 2.5)],
+        "description": "Double break - right, increasing from 1% to 2.5%, with grain"
+    }),
+    ("08_double_left_increasing_against_grain_uphill", {
+        "with_grain": False, "uphill": True, "break_direction": "left",
+        "slope_percent": 0.8, "break_change_points": [(4.0, 2.2)],
+        "description": "Double break - left, increasing from 0.8% to 2.2%, against grain, uphill"
+    }),
+    ("09_double_right_increasing_near_hole", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.2, "break_change_points": [(7.0, 2.8)],
+        "description": "Double break - right, increases near hole from 1.2% to 2.8%"
+    }),
+    ("10_double_left_decreasing_with_grain", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 2.5, "break_change_points": [(5.0, 1.2)],
+        "description": "Double break - left, decreasing from 2.5% to 1.2%, with grain"
+    }),
+    ("11_double_right_decreasing_against_grain_uphill", {
+        "with_grain": False, "uphill": True, "break_direction": "right",
+        "slope_percent": 2.8, "break_change_points": [(4.0, 1.0)],
+        "description": "Double break - right, decreasing from 2.8% to 1.0%, against grain, uphill"
+    }),
+
+    # RIDGE PUTTS
+    ("12_ridge_right_reverses_with_grain", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.0, "break_change_points": [(4.0, -1.8)], "ridge_putt": True,
+        "description": "Ridge putt - right break reverses to left 1.8% at 4ft, with grain"
+    }),
+    ("13_ridge_left_reverses_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.5, "break_change_points": [(5.0, -2.0)], "ridge_putt": True,
+        "description": "Ridge putt - left break reverses to right 2.0% at 5ft, against grain"
+    }),
+    ("14_ridge_right_reverses_uphill", {
+        "with_grain": True, "uphill": True, "break_direction": "right",
+        "slope_percent": 2.2, "break_change_points": [(3.5, -1.5)], "ridge_putt": True,
+        "description": "Ridge putt - right break reverses to left 1.5% at 3.5ft, uphill"
+    }),
+
+    # COMPLEX BREAKS
+    ("15_triple_right_complex_with_grain", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 0.8, "break_change_points": [(3.0, 2.2), (7.0, 1.0)],
+        "description": "Complex triple break - starts 0.8%, increases to 2.2% at 3ft, decreases to 1.0% at 7ft"
+    }),
+    ("16_triple_left_complex_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.0, "break_change_points": [(2.5, 2.5), (6.5, 1.5)],
+        "description": "Complex triple break - starts 1.0%, increases to 2.5% at 2.5ft, decreases to 1.5% at 6.5ft"
+    }),
+    ("17_triple_right_complex_uphill", {
+        "with_grain": True, "uphill": True, "break_direction": "right",
+        "slope_percent": 1.2, "break_change_points": [(4.0, 2.8), (8.0, 1.8)],
+        "description": "Complex triple break uphill - starts 1.2%, peaks at 2.8%, ends at 1.8%"
+    }),
+]
+
+# =========================================================================
+# AIMPOINT CATEGORIZED SCENARIOS
+# Tuned to produce specific AimPoint finger readings
+# =========================================================================
+
+AIMPOINT_1_SCENARIOS = [
+    # Simple breaks
+    ("ap1_gentle_right_downhill", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.2, "description": "AimPoint 1: Gentle right break, with grain, downhill"
+    }),
+    ("ap1_gentle_left_flat", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.3, "description": "AimPoint 1: Gentle left break, with grain, flat"
+    }),
+    ("ap1_gentle_right_uphill", {
+        "with_grain": False, "uphill": True, "break_direction": "right",
+        "slope_percent": 1.5, "description": "AimPoint 1: Gentle right break, against grain, uphill"
+    }),
+    ("ap1_gentle_left_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.2, "description": "AimPoint 1: Gentle left break, against grain"
+    }),
+    # Double breaks
+    ("ap1_double_right_slight", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.0, "break_change_points": [(5.0, 1.5)],
+        "description": "AimPoint 1: Double break, slight right increase"
+    }),
+    ("ap1_double_left_decreasing", {
+        "with_grain": False, "uphill": True, "break_direction": "left",
+        "slope_percent": 1.8, "break_change_points": [(6.0, 1.0)],
+        "description": "AimPoint 1: Double break left, decreasing uphill"
+    }),
+    # Double breaks with REVERSAL (direction change mid-putt)
+    ("ap1_double_right_to_left", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.0, "break_change_points": [(5.0, -0.8)], "ridge_putt": True,
+        "description": "AimPoint 1: Double break - R->L reversal at 5ft"
+    }),
+    ("ap1_double_left_to_right", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.8, "break_change_points": [(5.0, -0.6)], "ridge_putt": True,
+        "description": "AimPoint 1: Double break - L->R reversal at 5ft"
+    }),
+    # Triple breaks with 2 REVERSALS (R->L->R or L->R->L)
+    ("ap1_triple_right_left_right", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.5, "break_change_points": [(3.5, -0.8), (7.0, 0.6)], "ridge_putt": True,
+        "description": "AimPoint 1: Triple - R->L->R (2 reversals)"
+    }),
+    ("ap1_triple_left_right_left", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 1.3, "break_change_points": [(4.0, -0.7), (7.5, 0.5)], "ridge_putt": True,
+        "description": "AimPoint 1: Triple - L->R->L (2 reversals)"
+    }),
+]
+
+AIMPOINT_2_SCENARIOS = [
+    # Simple breaks
+    ("ap2_moderate_right_downhill", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.0, "description": "AimPoint 2: Moderate right break, with grain, downhill"
+    }),
+    ("ap2_moderate_left_flat", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 2.2, "description": "AimPoint 2: Moderate left break, with grain"
+    }),
+    ("ap2_moderate_right_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.3, "description": "AimPoint 2: Moderate right break, against grain"
+    }),
+    ("ap2_moderate_left_uphill", {
+        "with_grain": True, "uphill": True, "break_direction": "left",
+        "slope_percent": 2.5, "description": "AimPoint 2: Moderate left break, with grain, uphill"
+    }),
+    # Double breaks
+    ("ap2_double_right_building", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 1.5, "break_change_points": [(5.0, 2.5)],
+        "description": "AimPoint 2: Double break right, building slope"
+    }),
+    ("ap2_double_left_consistent", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 2.0, "break_change_points": [(5.0, 2.3)],
+        "description": "AimPoint 2: Double break left, consistent moderate"
+    }),
+    # Double breaks with REVERSAL - STRONG asymmetry for AimPoint 2
+    ("ap2_double_right_to_left", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 4.5, "break_change_points": [(7.0, -0.5)], "ridge_putt": True,
+        "description": "AimPoint 2: Double R->L - strong initial, late tiny reversal"
+    }),
+    ("ap2_double_left_to_right", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 4.2, "break_change_points": [(7.0, -0.4)], "ridge_putt": True,
+        "description": "AimPoint 2: Double L->R - strong initial, late tiny reversal"
+    }),
+    # Triple breaks with 2 REVERSALS - asymmetric for AimPoint 2
+    ("ap2_triple_right_left_right", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 4.0, "break_change_points": [(5.0, -0.5), (8.0, 0.3)], "ridge_putt": True,
+        "description": "AimPoint 2: Triple R->L->R - dominant right"
+    }),
+    ("ap2_triple_left_right_left", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 3.8, "break_change_points": [(5.0, -0.4), (8.0, 0.2)], "ridge_putt": True,
+        "description": "AimPoint 2: Triple L->R->L - dominant left"
+    }),
+]
+
+AIMPOINT_3_SCENARIOS = [
+    # Simple breaks
+    ("ap3_strong_right_downhill", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 3.2, "description": "AimPoint 3: Strong right break, with grain, downhill"
+    }),
+    ("ap3_strong_left_flat", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 3.5, "description": "AimPoint 3: Strong left break, with grain"
+    }),
+    ("ap3_strong_right_against_grain", {
+        "with_grain": False, "uphill": False, "break_direction": "right",
+        "slope_percent": 3.8, "description": "AimPoint 3: Strong right break, against grain"
+    }),
+    ("ap3_strong_left_uphill", {
+        "with_grain": False, "uphill": True, "break_direction": "left",
+        "slope_percent": 4.0, "description": "AimPoint 3: Strong left break, against grain, uphill"
+    }),
+    # Double breaks
+    ("ap3_double_right_steep", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.5, "break_change_points": [(4.0, 4.0)],
+        "description": "AimPoint 3: Double break right, steep increase"
+    }),
+    ("ap3_double_left_heavy", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 3.0, "break_change_points": [(5.0, 3.5)],
+        "description": "AimPoint 3: Double break left, heavy consistent"
+    }),
+    # Double breaks with REVERSAL - steep but realistic for AimPoint 3
+    ("ap3_double_right_to_left", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 5.0, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
+        "description": "AimPoint 3: Double R->L - 5% steep initial, small late reversal"
+    }),
+    ("ap3_double_left_to_right", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 4.8, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
+        "description": "AimPoint 3: Double L->R - 4.8% steep initial, small late reversal"
+    }),
+    # Triple breaks with 2 REVERSALS - realistic slopes for AimPoint 3
+    ("ap3_triple_right_left_right", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 5.0, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
+        "description": "AimPoint 3: Triple R->L->R - 5% dominant with small reversals"
+    }),
+    ("ap3_triple_left_right_left", {
+        "with_grain": True, "uphill": False, "break_direction": "left",
+        "slope_percent": 4.8, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
+        "description": "AimPoint 3: Triple L->R->L - 4.8% dominant with small reversals"
+    }),
+    # Triple breaks
+    ("ap3_triple_right_aggressive", {
+        "with_grain": True, "uphill": False, "break_direction": "right",
+        "slope_percent": 2.5, "break_change_points": [(3.0, 4.0), (7.0, 3.2)],
+        "description": "AimPoint 3: Triple break - aggressive right with high peak"
+    }),
+    ("ap3_triple_left_intense", {
+        "with_grain": False, "uphill": False, "break_direction": "left",
+        "slope_percent": 2.8, "break_change_points": [(3.5, 4.2), (7.0, 3.5)],
+        "description": "AimPoint 3: Triple break - intense left variations"
+    }),
+]
 
 
 # =============================================================================
 # MAIN
 # =============================================================================
 
+def _extract_aimpoint_from_svg(svg_content: str) -> int:
+    """Extract the actual AimPoint value from generated SVG content."""
+    match = re.search(r'AimPoint: (\d+)', svg_content)
+    return int(match.group(1)) if match else 0
+
+
+def _generate_scenario(generator, filename, params, output_path=None):
+    """
+    Generate a single scenario SVG, validate it, and return results.
+    
+    Args:
+        generator: PuttIllustrationGenerator instance
+        filename: Scenario name for logging
+        params: Dict of scenario parameters
+        output_path: If provided, save directly to this path
+        
+    Returns:
+        Tuple of (svg_content, sections, aimpoint_val, errors)
+    """
+    svg_content, sections = generator.generate_svg(
+        with_grain=params["with_grain"],
+        uphill=params["uphill"],
+        break_direction=params["break_direction"],
+        slope_percent=params["slope_percent"],
+        break_change_points=params.get("break_change_points"),
+        ridge_putt=params.get("ridge_putt", False),
+        output_path=output_path
+    )
+    
+    aimpoint_val = _extract_aimpoint_from_svg(svg_content)
+    
+    errors = validate_svg(
+        svg_content, params["break_direction"], params["slope_percent"],
+        params.get("break_change_points", []), params.get("ridge_putt", False),
+        sections
+    )
+    
+    return svg_content, sections, aimpoint_val, errors
+
+
+def _log_scenario_header(prefix, idx, total, filename, params):
+    """Print scenario generation header."""
+    print(f"\n{prefix}[{idx}/{total}] Generating: {filename}")
+    print(f"   Description: {params.get('description', 'N/A')}")
+    print(f"   Parameters: break={params['break_direction']}, slope={params['slope_percent']}%")
+    if params.get('break_change_points'):
+        print(f"   Break changes: {params['break_change_points']}")
+    if params.get('ridge_putt'):
+        print(f"   Ridge putt: Yes")
+
+
 def main():
-    """Generate comprehensive set of realistic 10ft putt scenarios (1-3% slopes)."""
+    """Generate comprehensive set of realistic 10ft putt scenarios."""
     generator = PuttIllustrationGenerator(width=120, height=600, text_column_width=120)
     
     output_dir = Path(__file__).parent / "output"
     output_dir.mkdir(exist_ok=True)
     
-    # Create AimPoint category folders
     aimpoint_dirs = {
         1: output_dir / "aimpoint_1",
-        2: output_dir / "aimpoint_2", 
+        2: output_dir / "aimpoint_2",
         3: output_dir / "aimpoint_3",
     }
     for d in aimpoint_dirs.values():
         d.mkdir(exist_ok=True)
     
-    # Original scenarios (to main output folder)
-    scenarios = [
-        # SIMPLE BREAKS
-        ("01_simple_right_with_grain_downhill", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.5, "description": "Simple right break, with grain, downhill"
-        }),
-        ("02_simple_left_against_grain_uphill", {
-            "with_grain": False, "uphill": True, "break_direction": "left",
-            "slope_percent": 1.8, "description": "Simple left break, against grain, uphill"
-        }),
-        ("03_simple_right_with_grain_flat", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.2, "description": "Simple right break, with grain, flat"
-        }),
-        ("04_simple_left_strong_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 2.5, "description": "Strong left break, against grain"
-        }),
-        ("05_simple_right_strong_with_grain_uphill", {
-            "with_grain": True, "uphill": True, "break_direction": "right",
-            "slope_percent": 2.8, "description": "Strong right break, with grain, uphill"
-        }),
-        ("06_simple_left_gentle_against_grain_downhill", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.0, "description": "Gentle left break, against grain, downhill"
-        }),
-        
-        # DOUBLE BREAKS
-        ("07_double_right_increasing_with_grain", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.0, "break_change_points": [(5.0, 2.5)],
-            "description": "Double break - right, increasing from 1% to 2.5%, with grain"
-        }),
-        ("08_double_left_increasing_against_grain_uphill", {
-            "with_grain": False, "uphill": True, "break_direction": "left",
-            "slope_percent": 0.8, "break_change_points": [(4.0, 2.2)],
-            "description": "Double break - left, increasing from 0.8% to 2.2%, against grain, uphill"
-        }),
-        ("09_double_right_increasing_near_hole", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.2, "break_change_points": [(7.0, 2.8)],
-            "description": "Double break - right, increases near hole from 1.2% to 2.8%"
-        }),
-        ("10_double_left_decreasing_with_grain", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 2.5, "break_change_points": [(5.0, 1.2)],
-            "description": "Double break - left, decreasing from 2.5% to 1.2%, with grain"
-        }),
-        ("11_double_right_decreasing_against_grain_uphill", {
-            "with_grain": False, "uphill": True, "break_direction": "right",
-            "slope_percent": 2.8, "break_change_points": [(4.0, 1.0)],
-            "description": "Double break - right, decreasing from 2.8% to 1.0%, against grain, uphill"
-        }),
-        
-        # RIDGE PUTTS
-        ("12_ridge_right_reverses_with_grain", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.0, "break_change_points": [(4.0, -1.8)], "ridge_putt": True,
-            "description": "Ridge putt - right break reverses to left 1.8% at 4ft, with grain"
-        }),
-        ("13_ridge_left_reverses_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.5, "break_change_points": [(5.0, -2.0)], "ridge_putt": True,
-            "description": "Ridge putt - left break reverses to right 2.0% at 5ft, against grain"
-        }),
-        ("14_ridge_right_reverses_uphill", {
-            "with_grain": True, "uphill": True, "break_direction": "right",
-            "slope_percent": 2.2, "break_change_points": [(3.5, -1.5)], "ridge_putt": True,
-            "description": "Ridge putt - right break reverses to left 1.5% at 3.5ft, uphill"
-        }),
-        
-        # COMPLEX BREAKS
-        ("15_triple_right_complex_with_grain", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 0.8, "break_change_points": [(3.0, 2.2), (7.0, 1.0)],
-            "description": "Complex triple break - starts 0.8%, increases to 2.2% at 3ft, decreases to 1.0% at 7ft"
-        }),
-        ("16_triple_left_complex_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.0, "break_change_points": [(2.5, 2.5), (6.5, 1.5)],
-            "description": "Complex triple break - starts 1.0%, increases to 2.5% at 2.5ft, decreases to 1.5% at 6.5ft"
-        }),
-        ("17_triple_right_complex_uphill", {
-            "with_grain": True, "uphill": True, "break_direction": "right",
-            "slope_percent": 1.2, "break_change_points": [(4.0, 2.8), (8.0, 1.8)],
-            "description": "Complex triple break uphill - starts 1.2%, peaks at 2.8%, ends at 1.8%"
-        }),
-    ]
-    
-    # =========================================================================
-    # AIMPOINT CATEGORIZED SCENARIOS
-    # Tuned to produce specific AimPoint finger readings
-    # =========================================================================
-    
-    # AIMPOINT 1 (gentle breaks ~1.0-1.5%)
-    aimpoint_1_scenarios = [
-        # Simple breaks
-        ("ap1_gentle_right_downhill", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.2, "description": "AimPoint 1: Gentle right break, with grain, downhill"
-        }),
-        ("ap1_gentle_left_flat", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.3, "description": "AimPoint 1: Gentle left break, with grain, flat"
-        }),
-        ("ap1_gentle_right_uphill", {
-            "with_grain": False, "uphill": True, "break_direction": "right",
-            "slope_percent": 1.5, "description": "AimPoint 1: Gentle right break, against grain, uphill"
-        }),
-        ("ap1_gentle_left_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.2, "description": "AimPoint 1: Gentle left break, against grain"
-        }),
-        # Double breaks
-        ("ap1_double_right_slight", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.0, "break_change_points": [(5.0, 1.5)],
-            "description": "AimPoint 1: Double break, slight right increase"
-        }),
-        ("ap1_double_left_decreasing", {
-            "with_grain": False, "uphill": True, "break_direction": "left",
-            "slope_percent": 1.8, "break_change_points": [(6.0, 1.0)],
-            "description": "AimPoint 1: Double break left, decreasing uphill"
-        }),
-        # Double breaks with REVERSAL (direction change mid-putt)
-        ("ap1_double_right_to_left", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.0, "break_change_points": [(5.0, -0.8)], "ridge_putt": True,
-            "description": "AimPoint 1: Double break - R->L reversal at 5ft"
-        }),
-        ("ap1_double_left_to_right", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.8, "break_change_points": [(5.0, -0.6)], "ridge_putt": True,
-            "description": "AimPoint 1: Double break - L->R reversal at 5ft"
-        }),
-        # Triple breaks with 2 REVERSALS (R->L->R or L->R->L)
-        ("ap1_triple_right_left_right", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.5, "break_change_points": [(3.5, -0.8), (7.0, 0.6)], "ridge_putt": True,
-            "description": "AimPoint 1: Triple - R->L->R (2 reversals)"
-        }),
-        ("ap1_triple_left_right_left", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 1.3, "break_change_points": [(4.0, -0.7), (7.5, 0.5)], "ridge_putt": True,
-            "description": "AimPoint 1: Triple - L->R->L (2 reversals)"
-        }),
-    ]
-    
-    # AIMPOINT 2 (moderate breaks ~2.0-2.5%)
-    aimpoint_2_scenarios = [
-        # Simple breaks
-        ("ap2_moderate_right_downhill", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.0, "description": "AimPoint 2: Moderate right break, with grain, downhill"
-        }),
-        ("ap2_moderate_left_flat", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 2.2, "description": "AimPoint 2: Moderate left break, with grain"
-        }),
-        ("ap2_moderate_right_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.3, "description": "AimPoint 2: Moderate right break, against grain"
-        }),
-        ("ap2_moderate_left_uphill", {
-            "with_grain": True, "uphill": True, "break_direction": "left",
-            "slope_percent": 2.5, "description": "AimPoint 2: Moderate left break, with grain, uphill"
-        }),
-        # Double breaks
-        ("ap2_double_right_building", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 1.5, "break_change_points": [(5.0, 2.5)],
-            "description": "AimPoint 2: Double break right, building slope"
-        }),
-        ("ap2_double_left_consistent", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 2.0, "break_change_points": [(5.0, 2.3)],
-            "description": "AimPoint 2: Double break left, consistent moderate"
-        }),
-        # Double breaks with REVERSAL - STRONG asymmetry for AimPoint 2
-        ("ap2_double_right_to_left", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 4.5, "break_change_points": [(7.0, -0.5)], "ridge_putt": True,
-            "description": "AimPoint 2: Double R->L - strong initial, late tiny reversal"
-        }),
-        ("ap2_double_left_to_right", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 4.2, "break_change_points": [(7.0, -0.4)], "ridge_putt": True,
-            "description": "AimPoint 2: Double L->R - strong initial, late tiny reversal"
-        }),
-        # Triple breaks with 2 REVERSALS - asymmetric for AimPoint 2
-        ("ap2_triple_right_left_right", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 4.0, "break_change_points": [(5.0, -0.5), (8.0, 0.3)], "ridge_putt": True,
-            "description": "AimPoint 2: Triple R->L->R - dominant right"
-        }),
-        ("ap2_triple_left_right_left", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 3.8, "break_change_points": [(5.0, -0.4), (8.0, 0.2)], "ridge_putt": True,
-            "description": "AimPoint 2: Triple L->R->L - dominant left"
-        }),
-    ]
-    
-    # AIMPOINT 3 (strong breaks ~3.0-5.0%)
-    aimpoint_3_scenarios = [
-        # Simple breaks
-        ("ap3_strong_right_downhill", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 3.2, "description": "AimPoint 3: Strong right break, with grain, downhill"
-        }),
-        ("ap3_strong_left_flat", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 3.5, "description": "AimPoint 3: Strong left break, with grain"
-        }),
-        ("ap3_strong_right_against_grain", {
-            "with_grain": False, "uphill": False, "break_direction": "right",
-            "slope_percent": 3.8, "description": "AimPoint 3: Strong right break, against grain"
-        }),
-        ("ap3_strong_left_uphill", {
-            "with_grain": False, "uphill": True, "break_direction": "left",
-            "slope_percent": 4.0, "description": "AimPoint 3: Strong left break, against grain, uphill"
-        }),
-        # Double breaks
-        ("ap3_double_right_steep", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.5, "break_change_points": [(4.0, 4.0)],
-            "description": "AimPoint 3: Double break right, steep increase"
-        }),
-        ("ap3_double_left_heavy", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 3.0, "break_change_points": [(5.0, 3.5)],
-            "description": "AimPoint 3: Double break left, heavy consistent"
-        }),
-        # Double breaks with REVERSAL - steep but realistic for AimPoint 3
-        ("ap3_double_right_to_left", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 5.0, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-            "description": "AimPoint 3: Double R->L - 5% steep initial, small late reversal"
-        }),
-        ("ap3_double_left_to_right", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 4.8, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-            "description": "AimPoint 3: Double L->R - 4.8% steep initial, small late reversal"
-        }),
-        # Triple breaks with 2 REVERSALS - realistic slopes for AimPoint 3
-        ("ap3_triple_right_left_right", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 5.0, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
-            "description": "AimPoint 3: Triple R->L->R - 5% dominant with small reversals"
-        }),
-        ("ap3_triple_left_right_left", {
-            "with_grain": True, "uphill": False, "break_direction": "left",
-            "slope_percent": 4.8, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
-            "description": "AimPoint 3: Triple L->R->L - 4.8% dominant with small reversals"
-        }),
-        # Triple breaks
-        ("ap3_triple_right_aggressive", {
-            "with_grain": True, "uphill": False, "break_direction": "right",
-            "slope_percent": 2.5, "break_change_points": [(3.0, 4.0), (7.0, 3.2)],
-            "description": "AimPoint 3: Triple break - aggressive right with high peak"
-        }),
-        ("ap3_triple_left_intense", {
-            "with_grain": False, "uphill": False, "break_direction": "left",
-            "slope_percent": 2.8, "break_change_points": [(3.5, 4.2), (7.0, 3.5)],
-            "description": "AimPoint 3: Triple break - intense left variations"
-        }),
-    ]
-    
     print("=" * 80)
     print("GENERATING PUTT ILLUSTRATIONS WITH REFACTORED PHYSICS ENGINE")
     print("=" * 80)
-    
-    import re
     
     successful_count = 0
     validation_errors = []
     aimpoint_counts = {0: 0, 1: 0, 2: 0, 3: 0, "4+": 0}
     
-    def extract_aimpoint_from_svg(svg_content: str) -> int:
-        """Extract the actual AimPoint value from generated SVG."""
-        match = re.search(r'AimPoint: (\d+)', svg_content)
-        if match:
-            return int(match.group(1))
-        return 0
-    
-    def generate_main_scenarios(scenario_list, target_dir):
-        """Generate main scenarios to a fixed directory."""
-        nonlocal successful_count, validation_errors
-        
-        for idx, (filename, params) in enumerate(scenario_list, 1):
-            output_path = str(target_dir / f"{filename}.svg")
-            
-            print(f"\n[MAIN] [{idx}/{len(scenario_list)}] Generating: {filename}")
-            print(f"   Description: {params.get('description', 'N/A')}")
-            print(f"   Parameters: break={params['break_direction']}, slope={params['slope_percent']}%")
-            
-            if params.get('break_change_points'):
-                print(f"   Break changes: {params['break_change_points']}")
-            if params.get('ridge_putt'):
-                print(f"   Ridge putt: Yes")
-            
-            try:
-                svg_content, section_slopes = generator.generate_svg(
-                    with_grain=params["with_grain"],
-                    uphill=params["uphill"],
-                    break_direction=params["break_direction"],
-                    slope_percent=params["slope_percent"],
-                    break_change_points=params.get("break_change_points"),
-                    ridge_putt=params.get("ridge_putt", False),
-                    output_path=output_path
-                )
-                
-                aimpoint_val = extract_aimpoint_from_svg(svg_content)
-                print(f"   [OK] SVG generated (AimPoint: {aimpoint_val})")
-                
-                errors = validate_svg(
-                    svg_content, params["break_direction"], params["slope_percent"],
-                    params.get("break_change_points", []), params.get("ridge_putt", False),
-                    section_slopes
-                )
-                
-                if errors:
-                    validation_errors.append((filename, errors))
-                    print(f"\n   [FAIL] VALIDATION FAILED for {filename}:")
-                    for error in errors:
-                        print(f"      - {error}")
-                else:
-                    successful_count += 1
-                    print(f"   [OK] Saved to: {output_path}")
-                    
-            except Exception as e:
-                print(f"\n   [ERROR] ERROR generating {filename}: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        return len(scenario_list)
-    
-    def generate_and_classify_scenarios(scenario_list, label=""):
-        """Generate scenarios and classify by ACTUAL AimPoint value."""
-        nonlocal successful_count, validation_errors, aimpoint_counts
-        
-        for idx, (filename, params) in enumerate(scenario_list, 1):
-            prefix = f"[{label}] " if label else ""
-            print(f"\n{prefix}[{idx}/{len(scenario_list)}] Generating: {filename}")
-            print(f"   Description: {params.get('description', 'N/A')}")
-            print(f"   Parameters: break={params['break_direction']}, slope={params['slope_percent']}%")
-            
-            if params.get('break_change_points'):
-                print(f"   Break changes: {params['break_change_points']}")
-            if params.get('ridge_putt'):
-                print(f"   Ridge putt: Yes")
-            
-            try:
-                # Generate WITHOUT saving first to get actual AimPoint
-                svg_content, section_slopes = generator.generate_svg(
-                    with_grain=params["with_grain"],
-                    uphill=params["uphill"],
-                    break_direction=params["break_direction"],
-                    slope_percent=params["slope_percent"],
-                    break_change_points=params.get("break_change_points"),
-                    ridge_putt=params.get("ridge_putt", False),
-                    output_path=None  # Don't save yet
-                )
-                
-                # Extract actual AimPoint value
-                actual_aimpoint = extract_aimpoint_from_svg(svg_content)
-                
-                # Classify into correct folder based on ACTUAL value
-                if actual_aimpoint == 0:
-                    # Skip AimPoint 0 - not useful for training
-                    print(f"   [SKIP] AimPoint: 0 - skipping (breaks cancel out)")
-                    aimpoint_counts[0] += 1
-                    continue
-                elif actual_aimpoint == 1:
-                    target_folder = aimpoint_dirs[1]
-                    aimpoint_counts[1] += 1
-                elif actual_aimpoint == 2:
-                    target_folder = aimpoint_dirs[2]
-                    aimpoint_counts[2] += 1
-                elif actual_aimpoint == 3:
-                    target_folder = aimpoint_dirs[3]
-                    aimpoint_counts[3] += 1
-                else:
-                    # AimPoint 4+ goes to aimpoint_3 folder
-                    target_folder = aimpoint_dirs[3]
-                    aimpoint_counts["4+"] += 1
-                
-                # Save to classified folder
-                output_path = str(target_folder / f"{filename}.svg")
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(svg_content)
-                
-                print(f"   [OK] Actual AimPoint: {actual_aimpoint} -> Saved to: aimpoint_{min(actual_aimpoint, 3)}/")
-                
-                errors = validate_svg(
-                    svg_content, params["break_direction"], params["slope_percent"],
-                    params.get("break_change_points", []), params.get("ridge_putt", False),
-                    section_slopes
-                )
-                
-                if errors:
-                    validation_errors.append((filename, errors))
-                    print(f"   [WARN] Validation issues: {errors}")
-                else:
-                    successful_count += 1
-                    
-            except Exception as e:
-                print(f"\n   [ERROR] ERROR generating {filename}: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        return len(scenario_list)
-    
-    # Generate main scenarios (fixed location)
+    # --- Generate main scenarios (fixed output directory) ---
     print("\n" + "-" * 40)
     print("MAIN SCENARIOS")
     print("-" * 40)
-    total_main = generate_main_scenarios(scenarios, output_dir)
     
-    # Combine all AimPoint scenarios into one pool for classification
-    all_aimpoint_scenarios = (
-        aimpoint_1_scenarios + 
-        aimpoint_2_scenarios + 
-        aimpoint_3_scenarios
-    )
+    for idx, (filename, params) in enumerate(MAIN_SCENARIOS, 1):
+        _log_scenario_header("[MAIN] ", idx, len(MAIN_SCENARIOS), filename, params)
+        try:
+            output_path = str(output_dir / f"{filename}.svg")
+            result = _generate_scenario(generator, filename, params, output_path)
+            svg_content, sections, aimpoint_val, errors = result
+            
+            print(f"   [OK] SVG generated (AimPoint: {aimpoint_val})")
+            if errors:
+                validation_errors.append((filename, errors))
+                print(f"\n   [FAIL] VALIDATION FAILED for {filename}:")
+                for error in errors:
+                    print(f"      - {error}")
+            else:
+                successful_count += 1
+                print(f"   [OK] Saved to: {output_path}")
+        except Exception as e:
+            print(f"\n   [ERROR] ERROR generating {filename}: {e}")
+            traceback.print_exc()
     
-    # Generate and classify by ACTUAL AimPoint value
+    # --- Generate and classify AimPoint scenarios ---
     print("\n" + "-" * 40)
     print("AIMPOINT SCENARIOS (Classifying by ACTUAL value)")
     print("-" * 40)
-    total_ap = generate_and_classify_scenarios(all_aimpoint_scenarios, "AP")
     
-    total_all = total_main + total_ap - aimpoint_counts[0]  # Subtract skipped
+    all_aimpoint_scenarios = (
+        AIMPOINT_1_SCENARIOS +
+        AIMPOINT_2_SCENARIOS +
+        AIMPOINT_3_SCENARIOS
+    )
+    
+    for idx, (filename, params) in enumerate(all_aimpoint_scenarios, 1):
+        _log_scenario_header("[AP] ", idx, len(all_aimpoint_scenarios), filename, params)
+        try:
+            result = _generate_scenario(generator, filename, params)
+            svg_content, sections, actual_aimpoint, errors = result
+            
+            # Classify into folder by actual AimPoint value
+            if actual_aimpoint == 0:
+                print(f"   [SKIP] AimPoint: 0 - skipping (breaks cancel out)")
+                aimpoint_counts[0] += 1
+                continue
+            
+            if actual_aimpoint >= 4:
+                target_folder = aimpoint_dirs[3]
+                aimpoint_counts["4+"] += 1
+            else:
+                target_folder = aimpoint_dirs[actual_aimpoint]
+                aimpoint_counts[actual_aimpoint] += 1
+            
+            output_path = str(target_folder / f"{filename}.svg")
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(svg_content)
+            
+            print(f"   [OK] Actual AimPoint: {actual_aimpoint} -> Saved to: aimpoint_{min(actual_aimpoint, 3)}/")
+            if errors:
+                validation_errors.append((filename, errors))
+                print(f"   [WARN] Validation issues: {errors}")
+            else:
+                successful_count += 1
+        except Exception as e:
+            print(f"\n   [ERROR] ERROR generating {filename}: {e}")
+            traceback.print_exc()
+    
+    # --- Summary ---
+    total_all = len(MAIN_SCENARIOS) + len(all_aimpoint_scenarios) - aimpoint_counts[0]
     
     print("\n" + "=" * 80)
-    print(f"GENERATION SUMMARY")
+    print("GENERATION SUMMARY")
     print("=" * 80)
-    print(f"Main scenarios: {total_main}")
+    print(f"Main scenarios: {len(MAIN_SCENARIOS)}")
     print(f"\nAimPoint Classification (by ACTUAL calculated value):")
     print(f"  AimPoint 0 (skipped): {aimpoint_counts[0]}")
     print(f"  AimPoint 1: {aimpoint_counts[1]}")
