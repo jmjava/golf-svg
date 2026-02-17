@@ -38,8 +38,8 @@ class LayoutConfig:
     the renderer, generator, and coordinate mapping.
     """
     width: int = 120
-    height: int = 600
-    text_column_width: int = 120
+    height: int = 660
+    text_column_width: int = 200
     putt_length_ft: float = 10.0
     margin: int = 30  # Top/bottom margin for ball and hole positions
     
@@ -98,6 +98,10 @@ class Colors:
     PINK = "#FF6B6B"           # AimPoint markers, break change markers
     CYAN = "#00CED1"           # Section divider lines
     
+    # --- Elevation indicator colors ---
+    ELEV_UPHILL = "#FFA726"        # Warm amber — uphill triangles
+    ELEV_DOWNHILL = "#4FC3F7"      # Cool light blue — downhill triangles
+    
     # --- Neutral tones ---
     WHITE = "#FFFFFF"
     OFF_WHITE = "#F5F5F5"
@@ -108,10 +112,20 @@ class Colors:
     BLACK = "#000000"
 
 
-# Elevation adjustment factors for effective break calculation.
-# Used by both physics display (SVGRenderer) and generation (PuttIllustrationGenerator).
-UPHILL_SLOPE_FACTOR = 0.85    # Uphill reduces effective break ~15%
-DOWNHILL_SLOPE_FACTOR = 1.15  # Downhill increases effective break ~15%
+# Elevation adjustment: scales effective break based on how steep the
+# uphill/downhill grade is.  At 0% elevation -> factor 1.0 (no change).
+# Each 1% of uphill reduces effective break by ~5%, each 1% downhill
+# increases it by ~5%.  Capped so the factor stays within [0.70, 1.30].
+ELEVATION_FACTOR_PER_PERCENT = 0.05
+
+def elevation_factor(elevation_pct: float) -> float:
+    """Return the break-adjustment factor for a given elevation percent.
+    
+    Positive elevation_pct = uphill -> factor < 1 (less break).
+    Negative elevation_pct = downhill -> factor > 1 (more break).
+    """
+    raw = 1.0 - elevation_pct * ELEVATION_FACTOR_PER_PERCENT
+    return max(0.70, min(1.30, raw))
 
 
 @dataclass
@@ -160,14 +174,23 @@ class SlopeSection:
 
 @dataclass
 class PuttConfig:
-    """Configuration for a putt scenario."""
+    """Configuration for a putt scenario.
+    
+    elevation_percent: positive = uphill, negative = downhill, 0 = flat.
+    Typical range: -3.0 to +3.0 (putting greens rarely exceed 3% grade).
+    """
     with_grain: bool
-    uphill: bool
+    elevation_percent: float  # +uphill / −downhill / 0 flat
     break_direction: BreakDirection
     slope_percent: float
     break_change_points: List[Tuple[float, float]] = field(default_factory=list)
     ridge_putt: bool = False
     putt_length_ft: float = 10.0
+    
+    @property
+    def uphill(self) -> bool:
+        """Backward-compatible property: True if elevation > 0."""
+        return self.elevation_percent > 0
     
     def get_sections(self) -> List[SlopeSection]:
         """
@@ -218,8 +241,7 @@ class PuttingPhysics:
     
     # Visual break scaling
     BASE_BREAK_SCALE = 40.0    # Pixels of lateral deviation per slope-percent-squared
-    UPHILL_BREAK_FACTOR = 0.8  # Uphill putts break ~20% less (ball moves faster)
-    DOWNHILL_BREAK_FACTOR = 1.2  # Downhill putts break ~20% more (ball moves slower)
+    # Elevation break scaling uses elevation_factor() based on config.elevation_percent
     
     # Newton-Raphson trajectory solver
     NR_MAX_ITERATIONS = 5       # Max iterations to find initial velocity
@@ -321,10 +343,8 @@ class PuttingPhysics:
         # Elevation affects break amount:
         # - Uphill: ball has more speed fighting gravity -> less break
         # - Downhill: ball is slower near hole -> more time for slope to act
-        if self.config.uphill:
-            BREAK_SCALE = self.BASE_BREAK_SCALE * self.UPHILL_BREAK_FACTOR
-        else:
-            BREAK_SCALE = self.BASE_BREAK_SCALE * self.DOWNHILL_BREAK_FACTOR
+        elev_fac = elevation_factor(self.config.elevation_percent)
+        BREAK_SCALE = self.BASE_BREAK_SCALE * elev_fac
         
         def derivatives(t_param: float, state: np.ndarray) -> np.ndarray:
             """
@@ -530,7 +550,7 @@ class SVGRenderer:
         """Generate all gradient definitions."""
         return f"""
         {self._grain_gradient(config.with_grain)}
-        {self._elevation_gradient(config.uphill)}
+        {self._elevation_gradient(config.elevation_percent)}
         {self._break_gradients(sections)}
         {self._hole_grain_gradient(config.with_grain)}
         """
@@ -554,23 +574,33 @@ class SVGRenderer:
             <stop offset="100%" style="stop-color:{C.GREEN_DARK_MED};stop-opacity:0.3" />
         </linearGradient>'''
     
-    def _elevation_gradient(self, uphill: bool) -> str:
-        """Create elevation shading gradient."""
+    def _elevation_gradient(self, elevation_percent: float) -> str:
+        """Create elevation shading gradient, scaled by elevation magnitude."""
         C = Colors
-        if uphill:
+        # Scale opacity by how steep the elevation is (0% = faint, 3% = full)
+        intensity = min(abs(elevation_percent) / 3.0, 1.0)
+        lo = 0.15 + 0.15 * intensity   # faint end: 0.15–0.30
+        hi = 0.5 + 0.5 * intensity     # strong end: 0.50–1.00
+        mid = (lo + hi) / 2
+        
+        if elevation_percent > 0:
+            # Uphill: dark at bottom (ball), lighter at top (hole is higher)
             return f'''<linearGradient id="elevationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:{C.GREEN_LIGHT};stop-opacity:0.3" />
-            <stop offset="20%" style="stop-color:{C.GREEN_LIGHT_MED};stop-opacity:0.4" />
-            <stop offset="50%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:0.6" />
-            <stop offset="80%" style="stop-color:{C.GREEN_MED_DARK};stop-opacity:0.85" />
-            <stop offset="100%" style="stop-color:{C.GREEN_VERY_DARK};stop-opacity:1.0" />
+            <stop offset="0%" style="stop-color:{C.GREEN_LIGHT};stop-opacity:{lo:.2f}" />
+            <stop offset="50%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:{mid:.2f}" />
+            <stop offset="100%" style="stop-color:{C.GREEN_VERY_DARK};stop-opacity:{hi:.2f}" />
         </linearGradient>'''
+        elif elevation_percent < 0:
+            # Downhill: dark at top (hole is lower), lighter at bottom
+            return f'''<linearGradient id="elevationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:{C.GREEN_VERY_DARK};stop-opacity:{hi:.2f}" />
+            <stop offset="50%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:{mid:.2f}" />
+            <stop offset="100%" style="stop-color:{C.GREEN_LIGHT};stop-opacity:{lo:.2f}" />
+        </linearGradient>'''
+        # Flat: very subtle uniform gradient
         return f'''<linearGradient id="elevationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:{C.GREEN_VERY_DARK};stop-opacity:1.0" />
-            <stop offset="20%" style="stop-color:{C.GREEN_MED_DARK};stop-opacity:0.85" />
-            <stop offset="50%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:0.6" />
-            <stop offset="80%" style="stop-color:{C.GREEN_LIGHT_MED};stop-opacity:0.4" />
-            <stop offset="100%" style="stop-color:{C.GREEN_LIGHT};stop-opacity:0.3" />
+            <stop offset="0%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:0.15" />
+            <stop offset="100%" style="stop-color:{C.GREEN_MEDIUM};stop-opacity:0.15" />
         </linearGradient>'''
     
     def _break_gradients(self, sections: List[SlopeSection]) -> str:
@@ -754,112 +784,264 @@ class SVGRenderer:
         
         return '\n    '.join(indicators) if indicators else ''
     
+    def render_elevation_indicators(self, elevation_percent: float) -> str:
+        """Create visual triangles showing uphill/downhill elevation along left side of green.
+        
+        Args:
+            elevation_percent: Positive = uphill, negative = downhill, 0 = flat.
+        """
+        C = Colors
+        indicators = []
+        x_pos = self.center_x - 20  # Offset left of center to avoid grain arrows
+        spacing = 120  # Wider spacing than grain arrows (80) to keep it clean
+        tri_size = 10  # Line length for marker attachment
+        
+        # Scale opacity with elevation magnitude (subtle at 0.5%, strong at 3%)
+        opacity = min(0.5 + abs(elevation_percent) * 0.15, 0.95)
+        
+        if elevation_percent > 0:
+            # Uphill: triangles pointing UP (toward hole)
+            marker = "url(#arrowhead-elev-up)"
+            color = C.ELEV_UPHILL
+            for y_mid in range(140, int(self.height - 80), spacing):
+                indicators.append(
+                    f'<line x1="{x_pos}" y1="{y_mid + tri_size}" x2="{x_pos}" y2="{y_mid}" '
+                    f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
+                    f'marker-end="{marker}" />'
+                )
+            label = f"▲ {abs(elevation_percent):.1f}%"
+        elif elevation_percent < 0:
+            # Downhill: triangles pointing DOWN (toward ball)
+            marker = "url(#arrowhead-elev-down)"
+            color = C.ELEV_DOWNHILL
+            for y_mid in range(140, int(self.height - 80), spacing):
+                indicators.append(
+                    f'<line x1="{x_pos}" y1="{y_mid}" x2="{x_pos}" y2="{y_mid + tri_size}" '
+                    f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
+                    f'marker-end="{marker}" />'
+                )
+            label = f"▼ {abs(elevation_percent):.1f}%"
+        else:
+            # Flat: just a label, no arrows
+            color = C.MED_GRAY
+            label = "FLAT"
+        
+        # Label near the top
+        indicators.append(
+            f'<text x="{x_pos}" y="125" font-family="Arial, sans-serif" font-size="6" '
+            f'fill="{color}" text-anchor="middle" font-weight="bold" opacity="0.9">{label}</text>'
+        )
+        
+        return '\n    '.join(indicators) if indicators else ''
+    
     def render_explanation_text(self, config: PuttConfig, sections: List[SlopeSection], 
                                aim_fingers: int) -> str:
-        """Generate AimPoint explanation text for right column."""
+        """Generate AimPoint explanation text for right column.
+        
+        All text uses the full column width via _wrap_text.
+        Font sizes: titles 12, headings 10, body 9, detail 8.
+        """
         C = Colors
-        x_offset = self.width + 10
-        y_start = 25
-        line_height = 16
-        max_text_width = self.text_column_width - 20
+        x = self.width + 8            # left margin inside black column
+        w = self.text_column_width - 16  # usable text width (both margins)
         
-        # Calculate NET slope adjusted for elevation
-        # SIGNED sum: L->R is positive, R->L is negative (or vice versa)
-        # This way opposite breaks cancel out (e.g., ridge putts)
-        signed_sum = 0.0
-        for s in sections:
-            # Use positive for one direction, negative for other
-            sign = 1.0 if s.breaks_right else -1.0
-            signed_sum += sign * abs(s.slope_percent)
-        
-        # Average the signed sum
+        # ----- compute values -----
+        signed_sum = sum(
+            (1.0 if s.breaks_right else -1.0) * abs(s.slope_percent)
+            for s in sections
+        )
         net_slope = signed_sum / len(sections)
-        
-        # Take absolute value for display (direction shown separately)
         avg_slope = abs(net_slope)
-        
-        # Adjust for elevation: uphill = less break, downhill = more break
-        if config.uphill:
-            adj_slope = avg_slope * UPHILL_SLOPE_FACTOR
-        else:
-            adj_slope = avg_slope * DOWNHILL_SLOPE_FACTOR
-        
-        # Direction based on NET slope (positive = L->R, negative = R->L)
+        elev_fac = elevation_factor(config.elevation_percent)
+        adj_slope = avg_slope * elev_fac
         direction_str = "L->R" if net_slope >= 0 else "R->L"
+        breaks_right = (net_slope >= 0)
+        ep = config.elevation_percent
         
-        parts = [
-            f'<text x="{x_offset}" y="{y_start}" font-family="Arial, sans-serif" font-size="10" fill="{C.GOLD}" font-weight="bold">AIMPOINT READ</text>',
-            f'<text x="{x_offset}" y="{y_start + 12}" font-family="Arial, sans-serif" font-size="10" fill="{C.GOLD}" font-weight="bold">ANALYSIS</text>',
-        ]
+        # ----- helpers -----
+        def heading(y, text):
+            return (y + 19, f'<text x="{x}" y="{y}" font-family="Arial, sans-serif" '
+                    f'font-size="11" fill="{C.GOLD}" font-weight="bold">{text}</text>')
         
-        y_pos = y_start + 35
+        def body_line(y, text, color=C.WHITE, size=9, indent=0):
+            return (y + 15, f'<text x="{x + indent}" y="{y}" font-family="Arial, sans-serif" '
+                    f'font-size="{size}" fill="{color}">{text}</text>')
         
-        # Slope info - adjusted average
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.WHITE}"><tspan font-weight="bold">Slope (adj):</tspan> {adj_slope:.1f}%</text>')
-        y_pos += line_height
+        def body_wrap(y, text, color=C.LIGHT_GRAY, size=9, indent=4):
+            """Wrap long text to fit column, return (new_y, list_of_svg)."""
+            lines = self._wrap_text(text, w - indent, size)
+            svgs = []
+            cy = y
+            for ln in lines:
+                svgs.append(f'<text x="{x + indent}" y="{cy}" font-family="Arial, sans-serif" '
+                           f'font-size="{size}" fill="{color}">{ln}</text>')
+                cy += 14
+            return (cy, svgs)
         
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.WHITE}"><tspan font-weight="bold">Direction:</tspan> {direction_str}</text>')
-        y_pos += line_height
+        parts = []
+        y = 22
         
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.WHITE}"><tspan font-weight="bold">AimPoint:</tspan> {aim_fingers} finger{"s" if aim_fingers != 1 else ""}</text>')
-        y_pos += 13
+        # ═══ TITLE ═══
+        parts.append(f'<text x="{x}" y="{y}" font-family="Arial, sans-serif" '
+                     f'font-size="12" fill="{C.GOLD}" font-weight="bold">AIMPOINT ANALYSIS</text>')
+        y += 22
         
-        parts.append(f'<text x="{x_offset + 5}" y="{y_pos}" font-family="Arial, sans-serif" font-size="8" fill="{C.LIGHT_GRAY}">({direction_str} break)</text>')
-        y_pos += 15
+        # ═══ SUMMARY ═══
+        y, t = body_line(y, f'Slope (adj): {adj_slope:.1f}%  |  Dir: {direction_str}')
+        parts.append(t)
+        y, t = body_line(y, f'AimPoint: {aim_fingers} finger{"s" if aim_fingers != 1 else ""} ({direction_str} break)')
+        parts.append(t)
         
-        # Section slopes
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.GOLD}" font-weight="bold">SECTION SLOPES:</text>')
-        y_pos += line_height
+        # elevation one-liner
+        if ep > 0:
+            elev_label = f"Elevation: UPHILL {ep:.1f}%"
+        elif ep < 0:
+            elev_label = f"Elevation: DOWNHILL {abs(ep):.1f}%"
+        else:
+            elev_label = "Elevation: FLAT (0%)"
+        y, t = body_line(y, elev_label)
+        parts.append(t)
         
+        grain_label = "Grain: WITH (fast/shiny)" if config.with_grain else "Grain: AGAINST (slow/dark)"
+        y, t = body_line(y, grain_label)
+        parts.append(t)
+        y += 2
+        
+        # ═══ SECTION SLOPES ═══
+        y, t = heading(y, "SECTION SLOPES:")
+        parts.append(t)
         for section in sections:
             slope_text = f'Sec {section.section_number}: {abs(section.slope_percent):.1f}% {section.direction_label}'
-            parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="8" fill="{C.WHITE}">{slope_text}</text>')
-            y_pos += 13
-            
-            # Wrap description
+            y, t = body_line(y, slope_text, size=9)
+            parts.append(t)
             desc = section.description()
-            for line in self._wrap_text(desc, max_text_width - 5, 7):
-                parts.append(f'<text x="{x_offset + 5}" y="{y_pos}" font-family="Arial, sans-serif" font-size="7" fill="{C.LIGHT_GRAY}">{line}</text>')
-                y_pos += 11
-            y_pos += 2
+            y, svgs = body_wrap(y, desc, size=8, indent=6)
+            parts.extend(svgs)
+            y += 1
+        y += 2
         
-        y_pos += 10
+        # ═══ GRAIN & BREAK ═══
+        y, t = heading(y, "GRAIN &amp; BREAK:")
+        parts.append(t)
         
-        # Conditions
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.GOLD}" font-weight="bold">CONDITIONS:</text>')
-        y_pos += line_height
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="8" fill="{C.WHITE}">Grain: {"WITH" if config.with_grain else "AGAINST"}</text>')
-        y_pos += 12
-        grain_desc = "fast, shiny" if config.with_grain else "slow, dark"
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="7" fill="{C.LIGHT_GRAY}">({grain_desc})</text>')
-        y_pos += 12
+        if config.with_grain:
+            grain_text = (
+                "WITH grain the ball rolls faster and looks shiny "
+                "(you see blade tops reflecting light). The ball holds "
+                "speed longer so it breaks LESS in the first half. "
+                "But as it dies near the hole, break increases sharply "
+                "- the slow-rolling ball curves hard at the end. "
+                "Play MORE break than the slope suggests."
+            )
+        else:
+            grain_text = (
+                "AGAINST grain the ball rolls slower and looks dark/dull "
+                "(you are looking into the blades). The ball loses speed "
+                "faster so the slope pulls it sideways sooner. Break "
+                "happens throughout the entire putt, not just at the end. "
+                "Hit FIRMER to maintain speed and play LESS break "
+                "than the slope suggests."
+            )
         
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="8" fill="{C.WHITE}">Elevation: {"UPHILL" if config.uphill else "FLAT/DOWN"}</text>')
-        y_pos += 16
+        y, svgs = body_wrap(y, grain_text)
+        parts.extend(svgs)
+        y += 4
         
-        # Reading tips
-        parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="9" fill="{C.GOLD}" font-weight="bold">READING TIPS:</text>')
-        y_pos += line_height
+        # ═══ AIMPOINT FEEL ═══
+        y, t = heading(y, "AIMPOINT FEEL:")
+        parts.append(t)
+        
+        # AimPoint: heavy foot is on the LOW side (where the ball breaks toward)
+        heavy_foot = "RIGHT" if breaks_right else "LEFT"
+        low_side = "right" if breaks_right else "left"
+        high_side = "left" if breaks_right else "right"
+        
+        if avg_slope < 1.0:
+            feel_word, weight_word = "subtle", "slight"
+        elif avg_slope < 2.5:
+            feel_word, weight_word = "moderate", "clear"
+        else:
+            feel_word, weight_word = "strong", "heavy"
+        
+        feel_text = (
+            f"Stand at the midpoint facing the hole. "
+            f"You will feel {weight_word} pressure on your "
+            f"{heavy_foot} foot ({feel_word} tilt). "
+            f"High side: {high_side}. Ball falls to the {low_side}."
+        )
+        y, svgs = body_wrap(y, feel_text, color=C.WHITE)
+        parts.extend(svgs)
+        
+        # elevation feel
+        if ep > 0:
+            elev_feel = f"Lean BACK slightly ({ep:.1f}% uphill). Hit firmer - ball breaks less because it moves faster across the slope."
+        elif ep < 0:
+            elev_feel = f"Lean FORWARD slightly ({abs(ep):.1f}% downhill). Hit softer - ball breaks more because it moves slower across the slope."
+        else:
+            elev_feel = "Level stance (flat). Normal pace - no elevation adjustment needed."
+        y, svgs = body_wrap(y, elev_feel, color=C.LIGHT_GRAY, size=8)
+        parts.extend(svgs)
+        y += 4
+        
+        # ═══ ELEVATION & BREAK ═══
+        y, t = heading(y, "ELEVATION &amp; BREAK:")
+        parts.append(t)
+        
+        this_adj = avg_slope * elev_fac
+        
+        if ep > 0:
+            elev_text = (
+                f"Uphill {ep:.1f}% means LESS break. You must hit harder "
+                f"to reach the hole, so the ball moves faster across "
+                f"the side slope, giving gravity less time to pull it "
+                f"sideways. This {avg_slope:.1f}% slope plays as "
+                f"{this_adj:.1f}% effective (vs {avg_slope:.1f}% on flat)."
+            )
+        elif ep < 0:
+            elev_text = (
+                f"Downhill {abs(ep):.1f}% means MORE break. You hit softer "
+                f"so the ball rolls slower across the side slope, "
+                f"giving gravity more time to pull it sideways. "
+                f"This {avg_slope:.1f}% slope plays as "
+                f"{this_adj:.1f}% effective (vs {avg_slope:.1f}% on flat)."
+            )
+        else:
+            elev_text = (
+                f"Flat putt - no elevation adjustment. "
+                f"The {avg_slope:.1f}% slope plays at face value."
+            )
+        
+        y, svgs = body_wrap(y, elev_text, color=C.LIGHT_GRAY, size=8)
+        parts.extend(svgs)
+        
+        # ═══ QUICK TIPS ═══
+        y += 4
+        y, t = heading(y, "QUICK TIPS:")
+        parts.append(t)
         
         tips = [
-            "1. Feel slope at midpoint",
-            f"2. Use {aim_fingers} finger{'s' if aim_fingers != 1 else ''} for aim",
-            "3. " + ("Account for grain" if config.with_grain else "Allow slower roll")
+            f"1. Feel the slope with your feet at the midpoint.",
+            f"2. Aim {aim_fingers} finger{'s' if aim_fingers != 1 else ''} to the {high_side} (high side).",
         ]
+        if config.with_grain:
+            tips.append("3. With grain: expect late break near the hole.")
+        else:
+            tips.append("3. Against grain: hit firmer, less total break.")
         if config.break_change_points:
-            tips.append("4. Break changes marked!")
+            tips.append("4. Watch for break changes (marked on green)!")
         
         for tip in tips:
-            color = C.GOLD if "4." in tip else C.WHITE
-            weight = "bold" if "4." in tip else "normal"
-            parts.append(f'<text x="{x_offset}" y="{y_pos}" font-family="Arial, sans-serif" font-size="8" fill="{color}" font-weight="{weight}">{tip}</text>')
-            y_pos += 13
+            y, svgs = body_wrap(y, tip, color=C.WHITE, size=8)
+            parts.extend(svgs)
         
         return '\n    '.join(parts)
     
     def _wrap_text(self, text: str, max_width: int, font_size: int) -> List[str]:
-        """Wrap text to fit within max_width."""
-        char_width = font_size * 0.6
+        """Wrap text to fit within max_width pixels.
+        
+        Arial average character width is ~0.47× the font size (measured).
+        """
+        char_width = font_size * 0.47
         max_chars = int(max_width / char_width)
         
         words = text.split()
@@ -913,13 +1095,13 @@ class PuttIllustrationGenerator:
     # Trajectory pixel margin
     PATH_MARGIN_PX = 10  # Keep putt path within green bounds
     
-    def __init__(self, width: int = 120, height: int = 600, text_column_width: int = 120):
+    def __init__(self, width: int = 120, height: int = 660, text_column_width: int = 200):
         self.layout = LayoutConfig(width=width, height=height, text_column_width=text_column_width)
         self.renderer = SVGRenderer(self.layout)
     
     def generate_svg(self,
                     with_grain: bool,
-                    uphill: bool,
+                    elevation_percent: float,
                     break_direction: str,
                     slope_percent: float,
                     break_change_points: Optional[List[Tuple[float, float]]] = None,
@@ -927,6 +1109,9 @@ class PuttIllustrationGenerator:
                     output_path: Optional[str] = None) -> Tuple[str, List]:
         """
         Generate SVG string for a putt illustration with AimPoint annotations.
+        
+        Args:
+            elevation_percent: Positive = uphill, negative = downhill, 0 = flat.
         """
         # Validate and clamp inputs
         if break_direction not in ["left", "right"]:
@@ -954,7 +1139,7 @@ class PuttIllustrationGenerator:
         # Create configuration
         config = PuttConfig(
             with_grain=with_grain,
-            uphill=uphill,
+            elevation_percent=elevation_percent,
             break_direction=BreakDirection(break_direction),
             slope_percent=slope_percent,
             break_change_points=break_change_points or [],
@@ -1049,6 +1234,14 @@ class PuttIllustrationGenerator:
             <polygon points="0,0 10,5 0,10" fill="{C.GREEN_LIGHT}" opacity="0.7" />
         </marker>
         
+        <!-- Elevation direction markers (distinct from grain) -->
+        <marker id="arrowhead-elev-up" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="0">
+            <polygon points="4,0 8,8 0,8" fill="{C.ELEV_UPHILL}" opacity="0.85" />
+        </marker>
+        <marker id="arrowhead-elev-down" markerWidth="8" markerHeight="8" refX="4" refY="0" orient="0">
+            <polygon points="0,0 8,0 4,8" fill="{C.ELEV_DOWNHILL}" opacity="0.85" />
+        </marker>
+        
         <!-- Grass texture pattern -->
         <pattern id="grassTexture" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
             <rect width="4" height="4" fill="url(#baseGreen)" opacity="0.95"/>
@@ -1071,6 +1264,9 @@ class PuttIllustrationGenerator:
     
     <!-- Visual grain direction indicators -->
     {r.render_grain_indicators(config.with_grain)}
+    
+    <!-- Visual elevation direction indicators (uphill/downhill) -->
+    {r.render_elevation_indicators(config.elevation_percent)}
     
     <!-- Target line (straight line to hole) -->
     <line x1="{L.center_x}" 
@@ -1237,91 +1433,91 @@ def validate_svg(svg_content: str, break_direction: str, slope_percent: float,
 # =============================================================================
 
 MAIN_SCENARIOS = [
-    # SIMPLE BREAKS
+    # SIMPLE BREAKS — variety of elevation: downhill, uphill, flat, steep down, gentle up
     ("01_simple_right_with_grain_downhill", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
-        "slope_percent": 1.5, "description": "Simple right break, with grain, downhill"
+        "with_grain": True, "elevation_percent": -1.5, "break_direction": "right",
+        "slope_percent": 1.5, "description": "Simple right break, with grain, 1.5% downhill"
     }),
     ("02_simple_left_against_grain_uphill", {
-        "with_grain": False, "uphill": True, "break_direction": "left",
-        "slope_percent": 1.8, "description": "Simple left break, against grain, uphill"
+        "with_grain": False, "elevation_percent": 2.0, "break_direction": "left",
+        "slope_percent": 1.8, "description": "Simple left break, against grain, 2% uphill"
     }),
     ("03_simple_right_with_grain_flat", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 1.2, "description": "Simple right break, with grain, flat"
     }),
     ("04_simple_left_strong_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
-        "slope_percent": 2.5, "description": "Strong left break, against grain"
+        "with_grain": False, "elevation_percent": -0.5, "break_direction": "left",
+        "slope_percent": 2.5, "description": "Strong left break, against grain, slight downhill"
     }),
     ("05_simple_right_strong_with_grain_uphill", {
-        "with_grain": True, "uphill": True, "break_direction": "right",
-        "slope_percent": 2.8, "description": "Strong right break, with grain, uphill"
+        "with_grain": True, "elevation_percent": 1.0, "break_direction": "right",
+        "slope_percent": 2.8, "description": "Strong right break, with grain, 1% uphill"
     }),
     ("06_simple_left_gentle_against_grain_downhill", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
-        "slope_percent": 1.0, "description": "Gentle left break, against grain, downhill"
+        "with_grain": False, "elevation_percent": -2.5, "break_direction": "left",
+        "slope_percent": 1.0, "description": "Gentle left break, against grain, 2.5% downhill"
     }),
 
     # DOUBLE BREAKS
     ("07_double_right_increasing_with_grain", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -1.0, "break_direction": "right",
         "slope_percent": 1.0, "break_change_points": [(5.0, 2.5)],
-        "description": "Double break - right, increasing from 1% to 2.5%, with grain"
+        "description": "Double break - right, increasing 1->2.5%, with grain, 1% downhill"
     }),
     ("08_double_left_increasing_against_grain_uphill", {
-        "with_grain": False, "uphill": True, "break_direction": "left",
+        "with_grain": False, "elevation_percent": 1.5, "break_direction": "left",
         "slope_percent": 0.8, "break_change_points": [(4.0, 2.2)],
-        "description": "Double break - left, increasing from 0.8% to 2.2%, against grain, uphill"
+        "description": "Double break - left, increasing 0.8->2.2%, against grain, 1.5% uphill"
     }),
     ("09_double_right_increasing_near_hole", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 1.2, "break_change_points": [(7.0, 2.8)],
-        "description": "Double break - right, increases near hole from 1.2% to 2.8%"
+        "description": "Double break - right, increases near hole 1.2->2.8%, flat"
     }),
     ("10_double_left_decreasing_with_grain", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": -0.8, "break_direction": "left",
         "slope_percent": 2.5, "break_change_points": [(5.0, 1.2)],
-        "description": "Double break - left, decreasing from 2.5% to 1.2%, with grain"
+        "description": "Double break - left, decreasing 2.5->1.2%, slight downhill"
     }),
     ("11_double_right_decreasing_against_grain_uphill", {
-        "with_grain": False, "uphill": True, "break_direction": "right",
+        "with_grain": False, "elevation_percent": 2.5, "break_direction": "right",
         "slope_percent": 2.8, "break_change_points": [(4.0, 1.0)],
-        "description": "Double break - right, decreasing from 2.8% to 1.0%, against grain, uphill"
+        "description": "Double break - right, decreasing 2.8->1%, 2.5% uphill"
     }),
 
     # RIDGE PUTTS
     ("12_ridge_right_reverses_with_grain", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -1.2, "break_direction": "right",
         "slope_percent": 2.0, "break_change_points": [(4.0, -1.8)], "ridge_putt": True,
-        "description": "Ridge putt - right break reverses to left 1.8% at 4ft, with grain"
+        "description": "Ridge putt - right reverses to left at 4ft, 1.2% downhill"
     }),
     ("13_ridge_left_reverses_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": 0.0, "break_direction": "left",
         "slope_percent": 1.5, "break_change_points": [(5.0, -2.0)], "ridge_putt": True,
-        "description": "Ridge putt - left break reverses to right 2.0% at 5ft, against grain"
+        "description": "Ridge putt - left reverses to right at 5ft, flat"
     }),
     ("14_ridge_right_reverses_uphill", {
-        "with_grain": True, "uphill": True, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 1.8, "break_direction": "right",
         "slope_percent": 2.2, "break_change_points": [(3.5, -1.5)], "ridge_putt": True,
-        "description": "Ridge putt - right break reverses to left 1.5% at 3.5ft, uphill"
+        "description": "Ridge putt - right reverses at 3.5ft, 1.8% uphill"
     }),
 
     # COMPLEX BREAKS
     ("15_triple_right_complex_with_grain", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -0.5, "break_direction": "right",
         "slope_percent": 0.8, "break_change_points": [(3.0, 2.2), (7.0, 1.0)],
-        "description": "Complex triple break - starts 0.8%, increases to 2.2% at 3ft, decreases to 1.0% at 7ft"
+        "description": "Triple break right, slight downhill"
     }),
     ("16_triple_left_complex_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 1.0, "break_change_points": [(2.5, 2.5), (6.5, 1.5)],
-        "description": "Complex triple break - starts 1.0%, increases to 2.5% at 2.5ft, decreases to 1.5% at 6.5ft"
+        "description": "Triple break left, 2% downhill"
     }),
     ("17_triple_right_complex_uphill", {
-        "with_grain": True, "uphill": True, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 1.2, "break_direction": "right",
         "slope_percent": 1.2, "break_change_points": [(4.0, 2.8), (8.0, 1.8)],
-        "description": "Complex triple break uphill - starts 1.2%, peaks at 2.8%, ends at 1.8%"
+        "description": "Triple break right, 1.2% uphill"
     }),
 ]
 
@@ -1331,172 +1527,172 @@ MAIN_SCENARIOS = [
 # =========================================================================
 
 AIMPOINT_1_SCENARIOS = [
-    # Simple breaks
+    # Simple breaks — mix of elevations
     ("ap1_gentle_right_downhill", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
-        "slope_percent": 1.2, "description": "AimPoint 1: Gentle right break, with grain, downhill"
+        "with_grain": True, "elevation_percent": -1.0, "break_direction": "right",
+        "slope_percent": 1.2, "description": "AimPoint 1: Gentle right, 1% downhill"
     }),
     ("ap1_gentle_left_flat", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
-        "slope_percent": 1.3, "description": "AimPoint 1: Gentle left break, with grain, flat"
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "left",
+        "slope_percent": 1.3, "description": "AimPoint 1: Gentle left, flat"
     }),
     ("ap1_gentle_right_uphill", {
-        "with_grain": False, "uphill": True, "break_direction": "right",
-        "slope_percent": 1.5, "description": "AimPoint 1: Gentle right break, against grain, uphill"
+        "with_grain": False, "elevation_percent": 1.5, "break_direction": "right",
+        "slope_percent": 1.5, "description": "AimPoint 1: Gentle right, 1.5% uphill"
     }),
     ("ap1_gentle_left_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
-        "slope_percent": 1.2, "description": "AimPoint 1: Gentle left break, against grain"
+        "with_grain": False, "elevation_percent": -0.3, "break_direction": "left",
+        "slope_percent": 1.2, "description": "AimPoint 1: Gentle left, slight downhill"
     }),
     # Double breaks
     ("ap1_double_right_slight", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -0.5, "break_direction": "right",
         "slope_percent": 1.0, "break_change_points": [(5.0, 1.5)],
-        "description": "AimPoint 1: Double break, slight right increase"
+        "description": "AimPoint 1: Double right, slight downhill"
     }),
     ("ap1_double_left_decreasing", {
-        "with_grain": False, "uphill": True, "break_direction": "left",
+        "with_grain": False, "elevation_percent": 2.0, "break_direction": "left",
         "slope_percent": 1.8, "break_change_points": [(6.0, 1.0)],
-        "description": "AimPoint 1: Double break left, decreasing uphill"
+        "description": "AimPoint 1: Double left decreasing, 2% uphill"
     }),
-    # Double breaks with REVERSAL (direction change mid-putt)
+    # Double breaks with REVERSAL
     ("ap1_double_right_to_left", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 2.0, "break_change_points": [(5.0, -0.8)], "ridge_putt": True,
-        "description": "AimPoint 1: Double break - R->L reversal at 5ft"
+        "description": "AimPoint 1: R->L reversal at 5ft, flat"
     }),
     ("ap1_double_left_to_right", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": -1.5, "break_direction": "left",
         "slope_percent": 1.8, "break_change_points": [(5.0, -0.6)], "ridge_putt": True,
-        "description": "AimPoint 1: Double break - L->R reversal at 5ft"
+        "description": "AimPoint 1: L->R reversal at 5ft, 1.5% downhill"
     }),
-    # Triple breaks with 2 REVERSALS (R->L->R or L->R->L)
+    # Triple breaks with 2 REVERSALS
     ("ap1_triple_right_left_right", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.5, "break_direction": "right",
         "slope_percent": 1.5, "break_change_points": [(3.5, -0.8), (7.0, 0.6)], "ridge_putt": True,
-        "description": "AimPoint 1: Triple - R->L->R (2 reversals)"
+        "description": "AimPoint 1: Triple R->L->R, gentle uphill"
     }),
     ("ap1_triple_left_right_left", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": -0.8, "break_direction": "left",
         "slope_percent": 1.3, "break_change_points": [(4.0, -0.7), (7.5, 0.5)], "ridge_putt": True,
-        "description": "AimPoint 1: Triple - L->R->L (2 reversals)"
+        "description": "AimPoint 1: Triple L->R->L, slight downhill"
     }),
 ]
 
 AIMPOINT_2_SCENARIOS = [
-    # Simple breaks
+    # Simple breaks — varied elevations
     ("ap2_moderate_right_downhill", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
-        "slope_percent": 2.0, "description": "AimPoint 2: Moderate right break, with grain, downhill"
+        "with_grain": True, "elevation_percent": -1.8, "break_direction": "right",
+        "slope_percent": 2.0, "description": "AimPoint 2: Moderate right, 1.8% downhill"
     }),
     ("ap2_moderate_left_flat", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
-        "slope_percent": 2.2, "description": "AimPoint 2: Moderate left break, with grain"
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "left",
+        "slope_percent": 2.2, "description": "AimPoint 2: Moderate left, flat"
     }),
     ("ap2_moderate_right_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "right",
-        "slope_percent": 2.3, "description": "AimPoint 2: Moderate right break, against grain"
+        "with_grain": False, "elevation_percent": -0.5, "break_direction": "right",
+        "slope_percent": 2.3, "description": "AimPoint 2: Moderate right, slight downhill"
     }),
     ("ap2_moderate_left_uphill", {
-        "with_grain": True, "uphill": True, "break_direction": "left",
-        "slope_percent": 2.5, "description": "AimPoint 2: Moderate left break, with grain, uphill"
+        "with_grain": True, "elevation_percent": 1.5, "break_direction": "left",
+        "slope_percent": 2.5, "description": "AimPoint 2: Moderate left, 1.5% uphill"
     }),
     # Double breaks
     ("ap2_double_right_building", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -1.0, "break_direction": "right",
         "slope_percent": 1.5, "break_change_points": [(5.0, 2.5)],
-        "description": "AimPoint 2: Double break right, building slope"
+        "description": "AimPoint 2: Double right building, 1% downhill"
     }),
     ("ap2_double_left_consistent", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": 0.8, "break_direction": "left",
         "slope_percent": 2.0, "break_change_points": [(5.0, 2.3)],
-        "description": "AimPoint 2: Double break left, consistent moderate"
+        "description": "AimPoint 2: Double left consistent, gentle uphill"
     }),
-    # Double breaks with REVERSAL - STRONG asymmetry for AimPoint 2
+    # Double breaks with REVERSAL
     ("ap2_double_right_to_left", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 4.5, "break_change_points": [(7.0, -0.5)], "ridge_putt": True,
-        "description": "AimPoint 2: Double R->L - strong initial, late tiny reversal"
+        "description": "AimPoint 2: R->L reversal, flat"
     }),
     ("ap2_double_left_to_right", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 4.2, "break_change_points": [(7.0, -0.4)], "ridge_putt": True,
-        "description": "AimPoint 2: Double L->R - strong initial, late tiny reversal"
+        "description": "AimPoint 2: L->R reversal, 2% downhill"
     }),
-    # Triple breaks with 2 REVERSALS - asymmetric for AimPoint 2
+    # Triple breaks with 2 REVERSALS
     ("ap2_triple_right_left_right", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 1.0, "break_direction": "right",
         "slope_percent": 4.0, "break_change_points": [(5.0, -0.5), (8.0, 0.3)], "ridge_putt": True,
-        "description": "AimPoint 2: Triple R->L->R - dominant right"
+        "description": "AimPoint 2: Triple R->L->R, 1% uphill"
     }),
     ("ap2_triple_left_right_left", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": -0.5, "break_direction": "left",
         "slope_percent": 3.8, "break_change_points": [(5.0, -0.4), (8.0, 0.2)], "ridge_putt": True,
-        "description": "AimPoint 2: Triple L->R->L - dominant left"
+        "description": "AimPoint 2: Triple L->R->L, slight downhill"
     }),
 ]
 
 AIMPOINT_3_SCENARIOS = [
-    # Simple breaks
+    # Simple breaks — varied elevations
     ("ap3_strong_right_downhill", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
-        "slope_percent": 3.2, "description": "AimPoint 3: Strong right break, with grain, downhill"
+        "with_grain": True, "elevation_percent": -2.5, "break_direction": "right",
+        "slope_percent": 3.2, "description": "AimPoint 3: Strong right, 2.5% downhill"
     }),
     ("ap3_strong_left_flat", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
-        "slope_percent": 3.5, "description": "AimPoint 3: Strong left break, with grain"
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "left",
+        "slope_percent": 3.5, "description": "AimPoint 3: Strong left, flat"
     }),
     ("ap3_strong_right_against_grain", {
-        "with_grain": False, "uphill": False, "break_direction": "right",
-        "slope_percent": 3.8, "description": "AimPoint 3: Strong right break, against grain"
+        "with_grain": False, "elevation_percent": -1.0, "break_direction": "right",
+        "slope_percent": 3.8, "description": "AimPoint 3: Strong right, 1% downhill"
     }),
     ("ap3_strong_left_uphill", {
-        "with_grain": False, "uphill": True, "break_direction": "left",
-        "slope_percent": 4.0, "description": "AimPoint 3: Strong left break, against grain, uphill"
+        "with_grain": False, "elevation_percent": 2.5, "break_direction": "left",
+        "slope_percent": 4.0, "description": "AimPoint 3: Strong left, 2.5% uphill"
     }),
     # Double breaks
     ("ap3_double_right_steep", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -1.5, "break_direction": "right",
         "slope_percent": 2.5, "break_change_points": [(4.0, 4.0)],
-        "description": "AimPoint 3: Double break right, steep increase"
+        "description": "AimPoint 3: Double right steep, 1.5% downhill"
     }),
     ("ap3_double_left_heavy", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": 0.5, "break_direction": "left",
         "slope_percent": 3.0, "break_change_points": [(5.0, 3.5)],
-        "description": "AimPoint 3: Double break left, heavy consistent"
+        "description": "AimPoint 3: Double left heavy, gentle uphill"
     }),
-    # Double breaks with REVERSAL - steep but realistic for AimPoint 3
+    # Double breaks with REVERSAL
     ("ap3_double_right_to_left", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 5.0, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-        "description": "AimPoint 3: Double R->L - 5% steep initial, small late reversal"
+        "description": "AimPoint 3: R->L reversal, flat"
     }),
     ("ap3_double_left_to_right", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 4.8, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-        "description": "AimPoint 3: Double L->R - 4.8% steep initial, small late reversal"
+        "description": "AimPoint 3: L->R reversal, 2% downhill"
     }),
-    # Triple breaks with 2 REVERSALS - realistic slopes for AimPoint 3
+    # Triple breaks with 2 REVERSALS
     ("ap3_triple_right_left_right", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": 1.2, "break_direction": "right",
         "slope_percent": 5.0, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
-        "description": "AimPoint 3: Triple R->L->R - 5% dominant with small reversals"
+        "description": "AimPoint 3: Triple R->L->R, 1.2% uphill"
     }),
     ("ap3_triple_left_right_left", {
-        "with_grain": True, "uphill": False, "break_direction": "left",
+        "with_grain": True, "elevation_percent": -0.8, "break_direction": "left",
         "slope_percent": 4.8, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
-        "description": "AimPoint 3: Triple L->R->L - 4.8% dominant with small reversals"
+        "description": "AimPoint 3: Triple L->R->L, slight downhill"
     }),
     # Triple breaks
     ("ap3_triple_right_aggressive", {
-        "with_grain": True, "uphill": False, "break_direction": "right",
+        "with_grain": True, "elevation_percent": -3.0, "break_direction": "right",
         "slope_percent": 2.5, "break_change_points": [(3.0, 4.0), (7.0, 3.2)],
-        "description": "AimPoint 3: Triple break - aggressive right with high peak"
+        "description": "AimPoint 3: Triple right aggressive, 3% downhill"
     }),
     ("ap3_triple_left_intense", {
-        "with_grain": False, "uphill": False, "break_direction": "left",
+        "with_grain": False, "elevation_percent": 1.8, "break_direction": "left",
         "slope_percent": 2.8, "break_change_points": [(3.5, 4.2), (7.0, 3.5)],
-        "description": "AimPoint 3: Triple break - intense left variations"
+        "description": "AimPoint 3: Triple left intense, 1.8% uphill"
     }),
 ]
 
@@ -1526,7 +1722,7 @@ def _generate_scenario(generator, filename, params, output_path=None):
     """
     svg_content, sections = generator.generate_svg(
         with_grain=params["with_grain"],
-        uphill=params["uphill"],
+        elevation_percent=params.get("elevation_percent", 0.0),
         break_direction=params["break_direction"],
         slope_percent=params["slope_percent"],
         break_change_points=params.get("break_change_points"),
@@ -1558,9 +1754,15 @@ def _log_scenario_header(prefix, idx, total, filename, params):
 
 def main():
     """Generate comprehensive set of realistic 10ft putt scenarios."""
-    generator = PuttIllustrationGenerator(width=120, height=600, text_column_width=120)
+    generator = PuttIllustrationGenerator(width=120, height=660, text_column_width=200)
     
     output_dir = Path(__file__).parent / "output"
+    
+    # Clean stale SVGs from previous runs before regenerating
+    if output_dir.exists():
+        for old_svg in output_dir.rglob("*.svg"):
+            old_svg.unlink()
+    
     output_dir.mkdir(exist_ok=True)
     
     aimpoint_dirs = {

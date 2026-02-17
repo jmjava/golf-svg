@@ -5,7 +5,7 @@ Uses realistic shading to represent visual cues that golfers actually see on put
 
 ## Features
 
-- Creates 120x600 pixel SVG images with a 120px annotation sidebar
+- Creates 120x660 pixel SVG images with a 120px annotation sidebar
 - Illustrates putt break in 3 sections (start/ball, middle, near hole)
 - **Realistic shading** based on actual green reading visual cues:
   - **Grain shading**: Lighter/shiny = with grain (faster), Darker/dull = against grain (slower)
@@ -32,6 +32,46 @@ The shading in these illustrations mimics what golfers actually observe when rea
    - The **high side** (where ball breaks from) appears **darker**
    - The **low side** (where ball breaks toward) appears **lighter**
    - The intensity of shading corresponds to the degree of break
+
+### Using Adjustable Tint Sunglasses to Read Grain
+
+One of the most effective tools for seeing grain on putting greens is a pair of
+**adjustable tint sunglasses** — lenses where you can dial the darkness level up
+or down in real time (e.g.
+[OUANGANC Adjustable Sunglasses](https://www.amazon.com/OUANGANC-Adjustable-Sunglasses-Protection-Universal/dp/B0F2J4Z91K)).
+
+**Why they work:**
+Grain is visible because grass blades reflect light differently depending on
+direction. With the grain (downgrain) the surface looks **shiny and lighter**;
+against the grain it looks **dark and matte**. Ordinary sunglasses reduce all
+light equally, which can wash out this subtle contrast. Adjustable tint lenses
+let you find the *exact* darkness level that maximizes the shiny-vs-dull
+difference on that day's light conditions.
+
+**How to use them on the green:**
+
+1. **Start with a medium tint** — stand behind your ball and look toward the
+   hole. Note which areas look lighter (downgrain / with grain) and which look
+   darker (into the grain / against grain).
+2. **Slowly increase the tint** — as you darken the lens, the shiny (with-grain)
+   areas will "pop" more against the darker (against-grain) areas. Stop at the
+   tint level where the contrast is strongest.
+3. **Check from multiple angles** — walk to the side and behind the hole. Grain
+   direction becomes especially obvious when you look across the green at a low
+   angle with the optimized tint.
+4. **Look at the hole edge** — with the right tint you can clearly see the
+   "burned" or ragged lip on the side where grain grows over the cup edge.
+   Grain grows *toward* the ragged side.
+
+**Tips:**
+- Bermuda grass (warm-climate courses) has the strongest grain effect — the
+  adjustable tint is most useful here
+- Bent grass (cool-climate courses) has subtler grain, but the adjustable tint
+  can still reveal it in afternoon light when shadows are longer
+- The optimal tint changes throughout the day as the sun angle shifts — being
+  able to adjust on the fly is the key advantage over fixed-tint sunglasses
+- Polarized adjustable lenses work even better because polarization suppresses
+  glare while the tint control enhances the grain contrast
 
 ## Usage
 
@@ -142,6 +182,59 @@ matching your slope rating.
 
 Your top finger marks your **aim point**. Align your putter face and stroke toward
 that point — gravity and the slope will curve the ball back to the hole.
+
+### AimPoint Feel — What You Sense at the Midpoint
+
+When you stand at the midpoint of the putt straddling the target line, your body
+gives you all the information AimPoint needs:
+
+| What You Feel | What It Means |
+|---------------|---------------|
+| Weight shifts to **left foot** | Left side is lower — ball breaks **right to left** |
+| Weight shifts to **right foot** | Right side is lower — ball breaks **left to right** |
+| **Subtle** pressure shift | ~1% slope — 1 finger read |
+| **Clear** pressure shift | ~2% slope — 2 finger read |
+| **Heavy** pressure on one foot | ~3%+ slope — 3+ finger read |
+| Leaning **back** (uphill putt) | Hit firmer — ball will break **less** |
+| Leaning **forward** (downhill putt) | Hit softer — ball will break **more** |
+
+**Examples of what you'd feel:**
+
+- **Gentle right break, downhill (1.5% slope):** You feel clear pressure on your
+  **right** foot with a slight forward lean. Ball will fall to the right (right is
+  the low side). Use 1 finger.
+- **Strong left break, uphill (3.0% slope):** You feel heavy pressure on your
+  **left** foot with a backward lean. Ball will fall to the left (left is the low
+  side), but less than expected because you'll hit it harder uphill. Use 2–3 fingers.
+- **Ridge putt (break reverses at midpoint):** You may feel the slope shift
+  under your feet. Walk both halves separately — the first half may tilt one way
+  while the second half tilts the opposite.
+
+### Why Downhill Putts Break More Than Uphill
+
+This is one of the most important concepts in green reading. The same side-slope
+will produce **more break on a downhill putt** and **less break on an uphill putt**.
+
+**The physics:**
+- **Downhill** → You hit the ball softer (less initial speed needed). The ball
+  rolls slower across the side-slope, giving gravity more time to pull it sideways.
+  Effective slope is ~15% greater (e.g., 2.0% plays like **2.3%**).
+- **Uphill** → You hit the ball harder (more speed to fight the hill). The ball
+  rolls faster across the side-slope, giving gravity less time to deflect it.
+  Effective slope is ~15% less (e.g., 2.0% plays like **1.7%**).
+
+**Concrete examples:**
+
+| Actual Slope | Uphill Effective | Downhill Effective | Difference |
+|-------------|-----------------|-------------------|------------|
+| 1.0% | 0.9% | 1.2% | 0.3% |
+| 2.0% | 1.7% | 2.3% | 0.6% |
+| 3.0% | 2.6% | 3.5% | 0.9% |
+| 4.0% | 3.4% | 4.6% | 1.2% |
+
+> **Practical tip:** On a 2% side-slope, a downhill putt will break roughly
+> **35% more** than the same putt uphill. Always add break on downhill reads
+> and subtract it on uphill reads.
 
 ### Key Principles
 
