@@ -103,7 +103,7 @@
     <line x1="40.0" y1="270" x2="40.0" y2="260" stroke="#4FC3F7" stroke-width="1.5" opacity="0.68" marker-end="url(#arrowhead-elev-up)" />
     <line x1="40.0" y1="390" x2="40.0" y2="380" stroke="#4FC3F7" stroke-width="1.5" opacity="0.68" marker-end="url(#arrowhead-elev-up)" />
     <line x1="40.0" y1="510" x2="40.0" y2="500" stroke="#4FC3F7" stroke-width="1.5" opacity="0.68" marker-end="url(#arrowhead-elev-up)" />
-    <text x="40.0" y="165" font-family="Arial, sans-serif" font-size="6" fill="#4FC3F7" text-anchor="middle" font-weight="bold" opacity="0.9">▼ 1.2%</text>
+    <text x="40.0" y="165" font-family="Arial, sans-serif" font-size="9" fill="#4FC3F7" text-anchor="middle" font-weight="bold" opacity="0.9">▲ 1.2%</text>
     
     <!-- Target line (straight line to hole) -->
     <line x1="60.0" 

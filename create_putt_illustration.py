@@ -810,7 +810,7 @@ class SVGRenderer:
                     f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
                     f'marker-end="{marker}" />'
                 )
-            label = f"▲ {abs(elevation_percent):.1f}%"
+            label = f"▼ {abs(elevation_percent):.1f}%"
         elif elevation_percent < 0:
             # Downhill: slope descends toward hole, arrows point UP (toward hole)
             # Shows ball rolling downhill toward hole
@@ -822,7 +822,7 @@ class SVGRenderer:
                     f'stroke="{color}" stroke-width="1.5" opacity="{opacity:.2f}" '
                     f'marker-end="{marker}" />'
                 )
-            label = f"▼ {abs(elevation_percent):.1f}%"
+            label = f"▲ {abs(elevation_percent):.1f}%"
         else:
             # Flat: just a label, no arrows
             color = C.MED_GRAY
@@ -831,7 +831,7 @@ class SVGRenderer:
         # Label just below the first elevation arrow (arrows start at y=140)
         label_y = 165
         indicators.append(
-            f'<text x="{x_pos}" y="{label_y}" font-family="Arial, sans-serif" font-size="6" '
+            f'<text x="{x_pos}" y="{label_y}" font-family="Arial, sans-serif" font-size="9" '
             f'fill="{color}" text-anchor="middle" font-weight="bold" opacity="0.9">{label}</text>'
         )
         
