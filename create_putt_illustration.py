@@ -1477,65 +1477,65 @@ MAIN_SCENARIOS = [
         "slope_percent": 1.0, "description": "Gentle left break, against grain, 2.5% downhill"
     }),
 
-    # DOUBLE BREAKS
-    ("07_double_right_increasing_with_grain", {
+    # VARYING INTENSITY (same direction throughout — NOT double/triple)
+    ("07_right_increasing_with_grain", {
         "with_grain": True, "elevation_percent": -1.0, "break_direction": "right",
         "slope_percent": 1.0, "break_change_points": [(5.0, 2.5)],
-        "description": "Double break - right, increasing 1->2.5%, with grain, 1% downhill"
+        "description": "Right break increasing 1->2.5%, with grain, 1% downhill"
     }),
-    ("08_double_left_increasing_against_grain_uphill", {
+    ("08_left_increasing_against_grain_uphill", {
         "with_grain": False, "elevation_percent": 1.5, "break_direction": "left",
         "slope_percent": 0.8, "break_change_points": [(4.0, 2.2)],
-        "description": "Double break - left, increasing 0.8->2.2%, against grain, 1.5% uphill"
+        "description": "Left break increasing 0.8->2.2%, against grain, 1.5% uphill"
     }),
-    ("09_double_right_increasing_near_hole", {
+    ("09_right_increasing_near_hole", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 1.2, "break_change_points": [(7.0, 2.8)],
-        "description": "Double break - right, increases near hole 1.2->2.8%, flat"
+        "description": "Right break increases near hole 1.2->2.8%, flat"
     }),
-    ("10_double_left_decreasing_with_grain", {
+    ("10_left_decreasing_with_grain", {
         "with_grain": True, "elevation_percent": -0.8, "break_direction": "left",
         "slope_percent": 2.5, "break_change_points": [(5.0, 1.2)],
-        "description": "Double break - left, decreasing 2.5->1.2%, slight downhill"
+        "description": "Left break decreasing 2.5->1.2%, slight downhill"
     }),
-    ("11_double_right_decreasing_against_grain_uphill", {
+    ("11_right_decreasing_against_grain_uphill", {
         "with_grain": False, "elevation_percent": 2.5, "break_direction": "right",
         "slope_percent": 2.8, "break_change_points": [(4.0, 1.0)],
-        "description": "Double break - right, decreasing 2.8->1%, 2.5% uphill"
+        "description": "Right break decreasing 2.8->1%, 2.5% uphill"
     }),
 
-    # RIDGE PUTTS
-    ("12_ridge_right_reverses_with_grain", {
+    # DOUBLE BREAKS (direction reverses once)
+    ("12_double_right_to_left_with_grain", {
         "with_grain": True, "elevation_percent": -1.2, "break_direction": "right",
         "slope_percent": 2.0, "break_change_points": [(4.0, -1.8)], "ridge_putt": True,
-        "description": "Ridge putt - right reverses to left at 4ft, 1.2% downhill"
+        "description": "Double break - right reverses to left at 4ft, 1.2% downhill"
     }),
-    ("13_ridge_left_reverses_against_grain", {
+    ("13_double_left_to_right_against_grain", {
         "with_grain": False, "elevation_percent": 0.0, "break_direction": "left",
         "slope_percent": 1.5, "break_change_points": [(5.0, -2.0)], "ridge_putt": True,
-        "description": "Ridge putt - left reverses to right at 5ft, flat"
+        "description": "Double break - left reverses to right at 5ft, flat"
     }),
-    ("14_ridge_right_reverses_uphill", {
+    ("14_double_right_to_left_uphill", {
         "with_grain": True, "elevation_percent": 1.8, "break_direction": "right",
         "slope_percent": 2.2, "break_change_points": [(3.5, -1.5)], "ridge_putt": True,
-        "description": "Ridge putt - right reverses at 3.5ft, 1.8% uphill"
+        "description": "Double break - right reverses to left at 3.5ft, 1.8% uphill"
     }),
 
-    # COMPLEX BREAKS
-    ("15_triple_right_complex_with_grain", {
+    # VARYING INTENSITY — multiple changes, same direction (NOT triple)
+    ("15_right_varying_with_grain", {
         "with_grain": True, "elevation_percent": -0.5, "break_direction": "right",
         "slope_percent": 0.8, "break_change_points": [(3.0, 2.2), (7.0, 1.0)],
-        "description": "Triple break right, slight downhill"
+        "description": "Right break varying 0.8->2.2->1.0%, slight downhill"
     }),
-    ("16_triple_left_complex_against_grain", {
+    ("16_left_varying_against_grain", {
         "with_grain": False, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 1.0, "break_change_points": [(2.5, 2.5), (6.5, 1.5)],
-        "description": "Triple break left, 2% downhill"
+        "description": "Left break varying 1.0->2.5->1.5%, 2% downhill"
     }),
-    ("17_triple_right_complex_uphill", {
+    ("17_right_varying_uphill", {
         "with_grain": True, "elevation_percent": 1.2, "break_direction": "right",
         "slope_percent": 1.2, "break_change_points": [(4.0, 2.8), (8.0, 1.8)],
-        "description": "Triple break right, 1.2% uphill"
+        "description": "Right break varying 1.2->2.8->1.8%, 1.2% uphill"
     }),
 ]
 
@@ -1562,29 +1562,29 @@ AIMPOINT_1_SCENARIOS = [
         "with_grain": False, "elevation_percent": -0.3, "break_direction": "left",
         "slope_percent": 1.2, "description": "AimPoint 1: Gentle left, slight downhill"
     }),
-    # Double breaks
-    ("ap1_double_right_slight", {
+    # Varying intensity (same direction — NOT double)
+    ("ap1_right_increasing_slight", {
         "with_grain": True, "elevation_percent": -0.5, "break_direction": "right",
         "slope_percent": 1.0, "break_change_points": [(5.0, 1.5)],
-        "description": "AimPoint 1: Double right, slight downhill"
+        "description": "AimPoint 1: Right increasing 1->1.5%, slight downhill"
     }),
-    ("ap1_double_left_decreasing", {
+    ("ap1_left_decreasing", {
         "with_grain": False, "elevation_percent": 2.0, "break_direction": "left",
         "slope_percent": 1.8, "break_change_points": [(6.0, 1.0)],
-        "description": "AimPoint 1: Double left decreasing, 2% uphill"
+        "description": "AimPoint 1: Left decreasing 1.8->1%, 2% uphill"
     }),
-    # Double breaks with REVERSAL
+    # Double breaks (direction reverses once)
     ("ap1_double_right_to_left", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 2.0, "break_change_points": [(5.0, -0.8)], "ridge_putt": True,
-        "description": "AimPoint 1: R->L reversal at 5ft, flat"
+        "description": "AimPoint 1: Double R->L at 5ft, flat"
     }),
     ("ap1_double_left_to_right", {
         "with_grain": False, "elevation_percent": -1.5, "break_direction": "left",
         "slope_percent": 1.8, "break_change_points": [(5.0, -0.6)], "ridge_putt": True,
-        "description": "AimPoint 1: L->R reversal at 5ft, 1.5% downhill"
+        "description": "AimPoint 1: Double L->R at 5ft, 1.5% downhill"
     }),
-    # Triple breaks with 2 REVERSALS
+    # Triple breaks (direction reverses twice)
     ("ap1_triple_right_left_right", {
         "with_grain": True, "elevation_percent": 0.5, "break_direction": "right",
         "slope_percent": 1.5, "break_change_points": [(3.5, -0.8), (7.0, 0.6)], "ridge_putt": True,
@@ -1615,29 +1615,29 @@ AIMPOINT_2_SCENARIOS = [
         "with_grain": True, "elevation_percent": 1.5, "break_direction": "left",
         "slope_percent": 2.5, "description": "AimPoint 2: Moderate left, 1.5% uphill"
     }),
-    # Double breaks
-    ("ap2_double_right_building", {
+    # Varying intensity (same direction — NOT double)
+    ("ap2_right_building", {
         "with_grain": True, "elevation_percent": -1.0, "break_direction": "right",
         "slope_percent": 1.5, "break_change_points": [(5.0, 2.5)],
-        "description": "AimPoint 2: Double right building, 1% downhill"
+        "description": "AimPoint 2: Right building 1.5->2.5%, 1% downhill"
     }),
-    ("ap2_double_left_consistent", {
+    ("ap2_left_consistent", {
         "with_grain": False, "elevation_percent": 0.8, "break_direction": "left",
         "slope_percent": 2.0, "break_change_points": [(5.0, 2.3)],
-        "description": "AimPoint 2: Double left consistent, gentle uphill"
+        "description": "AimPoint 2: Left consistent 2.0->2.3%, gentle uphill"
     }),
-    # Double breaks with REVERSAL
+    # Double breaks (direction reverses once)
     ("ap2_double_right_to_left", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 4.5, "break_change_points": [(7.0, -0.5)], "ridge_putt": True,
-        "description": "AimPoint 2: R->L reversal, flat"
+        "description": "AimPoint 2: Double R->L at 7ft, flat"
     }),
     ("ap2_double_left_to_right", {
         "with_grain": True, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 4.2, "break_change_points": [(7.0, -0.4)], "ridge_putt": True,
-        "description": "AimPoint 2: L->R reversal, 2% downhill"
+        "description": "AimPoint 2: Double L->R at 7ft, 2% downhill"
     }),
-    # Triple breaks with 2 REVERSALS
+    # Triple breaks (direction reverses twice)
     ("ap2_triple_right_left_right", {
         "with_grain": True, "elevation_percent": 1.0, "break_direction": "right",
         "slope_percent": 4.0, "break_change_points": [(5.0, -0.5), (8.0, 0.3)], "ridge_putt": True,
@@ -1668,29 +1668,29 @@ AIMPOINT_3_SCENARIOS = [
         "with_grain": False, "elevation_percent": 2.5, "break_direction": "left",
         "slope_percent": 4.0, "description": "AimPoint 3: Strong left, 2.5% uphill"
     }),
-    # Double breaks
-    ("ap3_double_right_steep", {
+    # Varying intensity (same direction — NOT double)
+    ("ap3_right_steep", {
         "with_grain": True, "elevation_percent": -1.5, "break_direction": "right",
         "slope_percent": 2.5, "break_change_points": [(4.0, 4.0)],
-        "description": "AimPoint 3: Double right steep, 1.5% downhill"
+        "description": "AimPoint 3: Right steep 2.5->4%, 1.5% downhill"
     }),
-    ("ap3_double_left_heavy", {
+    ("ap3_left_heavy", {
         "with_grain": True, "elevation_percent": 0.5, "break_direction": "left",
         "slope_percent": 3.0, "break_change_points": [(5.0, 3.5)],
-        "description": "AimPoint 3: Double left heavy, gentle uphill"
+        "description": "AimPoint 3: Left heavy 3->3.5%, gentle uphill"
     }),
-    # Double breaks with REVERSAL
+    # Double breaks (direction reverses once)
     ("ap3_double_right_to_left", {
         "with_grain": True, "elevation_percent": 0.0, "break_direction": "right",
         "slope_percent": 5.0, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-        "description": "AimPoint 3: R->L reversal, flat"
+        "description": "AimPoint 3: Double R->L at 8.5ft, flat"
     }),
     ("ap3_double_left_to_right", {
         "with_grain": True, "elevation_percent": -2.0, "break_direction": "left",
         "slope_percent": 4.8, "break_change_points": [(8.5, -0.3)], "ridge_putt": True,
-        "description": "AimPoint 3: L->R reversal, 2% downhill"
+        "description": "AimPoint 3: Double L->R at 8.5ft, 2% downhill"
     }),
-    # Triple breaks with 2 REVERSALS
+    # Triple breaks (direction reverses twice)
     ("ap3_triple_right_left_right", {
         "with_grain": True, "elevation_percent": 1.2, "break_direction": "right",
         "slope_percent": 5.0, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
@@ -1701,16 +1701,16 @@ AIMPOINT_3_SCENARIOS = [
         "slope_percent": 4.8, "break_change_points": [(7.0, -0.3), (9.0, 0.2)], "ridge_putt": True,
         "description": "AimPoint 3: Triple L->R->L, slight downhill"
     }),
-    # Triple breaks
-    ("ap3_triple_right_aggressive", {
+    # Varying intensity (same direction — NOT triple)
+    ("ap3_right_aggressive", {
         "with_grain": True, "elevation_percent": -3.0, "break_direction": "right",
         "slope_percent": 2.5, "break_change_points": [(3.0, 4.0), (7.0, 3.2)],
-        "description": "AimPoint 3: Triple right aggressive, 3% downhill"
+        "description": "AimPoint 3: Right aggressive 2.5->4->3.2%, 3% downhill"
     }),
-    ("ap3_triple_left_intense", {
+    ("ap3_left_intense", {
         "with_grain": False, "elevation_percent": 1.8, "break_direction": "left",
         "slope_percent": 2.8, "break_change_points": [(3.5, 4.2), (7.0, 3.5)],
-        "description": "AimPoint 3: Triple left intense, 1.8% uphill"
+        "description": "AimPoint 3: Left intense 2.8->4.2->3.5%, 1.8% uphill"
     }),
 ]
 
@@ -1797,7 +1797,7 @@ def main():
     
     successful_count = 0
     validation_errors = []
-    aimpoint_counts = {0: 0, 1: 0, 2: 0, 3: 0, "4+": 0}
+    aimpoint_counts = {1: 0, 2: 0, 3: 0, "4+": 0}
     
     # --- Generate main scenarios (fixed output directory) ---
     print("\n" + "-" * 40)
@@ -1842,25 +1842,33 @@ def main():
             svg_content, sections, actual_aimpoint, errors = result
             
             # Classify into folder by actual AimPoint value
-            if actual_aimpoint == 0:
-                print(f"   [SKIP] AimPoint: 0 - skipping (breaks cancel out)")
-                aimpoint_counts[0] += 1
-                continue
-            
-            if actual_aimpoint >= 4:
+            # AimPoint 0 (ridge putts where breaks cancel) -> save in aimpoint_1
+            effective_ap = max(1, actual_aimpoint)
+            if effective_ap >= 4:
                 target_folder = aimpoint_dirs[3]
+                folder_ap = 3
                 aimpoint_counts["4+"] += 1
             else:
-                target_folder = aimpoint_dirs[actual_aimpoint]
-                aimpoint_counts[actual_aimpoint] += 1
+                target_folder = aimpoint_dirs[effective_ap]
+                folder_ap = effective_ap
+                aimpoint_counts[effective_ap] += 1
             
-            output_path = str(target_folder / f"{filename}.svg")
+            # Rename file prefix to match ACTUAL aimpoint folder (ap1_, ap2_, ap3_)
+            # so the prefix is always consistent with the folder it lands in
+            actual_filename = re.sub(r'^ap\d+_', f'ap{folder_ap}_', filename)
+            
+            output_path = str(target_folder / f"{actual_filename}.svg")
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(svg_content)
             
-            print(f"   [OK] Actual AimPoint: {actual_aimpoint} -> Saved to: aimpoint_{min(actual_aimpoint, 3)}/")
+            if actual_aimpoint == 0:
+                print(f"   [OK] AimPoint: 0 (ridge) -> Saved as ap{folder_ap}_ in aimpoint_{folder_ap}/")
+            elif actual_filename != filename:
+                print(f"   [OK] AimPoint: {actual_aimpoint} (reclassified {filename} -> {actual_filename}) -> aimpoint_{folder_ap}/")
+            else:
+                print(f"   [OK] AimPoint: {actual_aimpoint} -> Saved to: aimpoint_{folder_ap}/")
             if errors:
-                validation_errors.append((filename, errors))
+                validation_errors.append((actual_filename, errors))
                 print(f"   [WARN] Validation issues: {errors}")
             else:
                 successful_count += 1
@@ -1869,14 +1877,13 @@ def main():
             traceback.print_exc()
     
     # --- Summary ---
-    total_all = len(MAIN_SCENARIOS) + len(all_aimpoint_scenarios) - aimpoint_counts[0]
+    total_all = len(MAIN_SCENARIOS) + len(all_aimpoint_scenarios)
     
     print("\n" + "=" * 80)
     print("GENERATION SUMMARY")
     print("=" * 80)
     print(f"Main scenarios: {len(MAIN_SCENARIOS)}")
     print(f"\nAimPoint Classification (by ACTUAL calculated value):")
-    print(f"  AimPoint 0 (skipped): {aimpoint_counts[0]}")
     print(f"  AimPoint 1: {aimpoint_counts[1]}")
     print(f"  AimPoint 2: {aimpoint_counts[2]}")
     print(f"  AimPoint 3: {aimpoint_counts[3]}")

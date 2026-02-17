@@ -10,29 +10,29 @@
         
         
         <linearGradient id="grainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#E8F5E9;stop-opacity:0.6" />
-            <stop offset="30%" style="stop-color:#C8E6C9;stop-opacity:0.5" />
-            <stop offset="60%" style="stop-color:#A5D6A7;stop-opacity:0.35" />
-            <stop offset="100%" style="stop-color:#81C784;stop-opacity:0.2" />
+            <stop offset="0%" style="stop-color:#0D1F0A;stop-opacity:0.7" />
+            <stop offset="30%" style="stop-color:#1B3D14;stop-opacity:0.6" />
+            <stop offset="60%" style="stop-color:#2E5A1F;stop-opacity:0.45" />
+            <stop offset="100%" style="stop-color:#3E7B2F;stop-opacity:0.3" />
         </linearGradient>
         <linearGradient id="elevationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:0.83" />
-            <stop offset="50%" style="stop-color:#689F38;stop-opacity:0.54" />
-            <stop offset="100%" style="stop-color:#AED581;stop-opacity:0.25" />
+            <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:0.75" />
+            <stop offset="50%" style="stop-color:#689F38;stop-opacity:0.49" />
+            <stop offset="100%" style="stop-color:#AED581;stop-opacity:0.22" />
         </linearGradient>
         <linearGradient id="breakGradientSec1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.2" />
-            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.36000000000000004" />
-            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.6000000000000001" />
-            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:1.0" />
+            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.326" />
+            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.4272" />
+            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.579" />
+            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.7055" />
+            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:0.832" />
         </linearGradient>
         <linearGradient id="breakGradientSec2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#C5E1A5;stop-opacity:0.2" />
-            <stop offset="25%" style="stop-color:#AED581;stop-opacity:0.36000000000000004" />
-            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.6000000000000001" />
-            <stop offset="75%" style="stop-color:#689F38;stop-opacity:0.8" />
-            <stop offset="100%" style="stop-color:#1B3D14;stop-opacity:1.0" />
+            <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:0.72" />
+            <stop offset="25%" style="stop-color:#689F38;stop-opacity:0.6425" />
+            <stop offset="50%" style="stop-color:#8BC34A;stop-opacity:0.565" />
+            <stop offset="75%" style="stop-color:#AED581;stop-opacity:0.48750000000000004" />
+            <stop offset="100%" style="stop-color:#C5E1A5;stop-opacity:0.41000000000000003" />
         </linearGradient>
         <linearGradient id="breakGradientSec3" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" style="stop-color:#1B3D14;stop-opacity:0.72" />
@@ -42,9 +42,9 @@
             <stop offset="100%" style="stop-color:#C5E1A5;stop-opacity:0.41000000000000003" />
         </linearGradient>
         <linearGradient id="holeGrainGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.3" />
+            <stop offset="0%" style="stop-color:#999999;stop-opacity:0.6" />
             <stop offset="50%" style="stop-color:#CCCCCC;stop-opacity:0.5" />
-            <stop offset="100%" style="stop-color:#999999;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.3" />
         </linearGradient>
         
         
@@ -88,20 +88,20 @@
     <rect width="120" height="660" fill="url(#grainGradient)" opacity="0.6" />
     
     <!-- Visual grain direction indicators -->
-    <line x1="60.0" y1="100" x2="60.0" y2="85" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="180" x2="60.0" y2="165" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="260" x2="60.0" y2="245" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="340" x2="60.0" y2="325" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="420" x2="60.0" y2="405" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="500" x2="60.0" y2="485" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
-    <line x1="60.0" y1="580" x2="60.0" y2="565" stroke="#C5E1A5" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="100" x2="60.0" y2="115" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="180" x2="60.0" y2="195" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="260" x2="60.0" y2="275" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="340" x2="60.0" y2="355" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="420" x2="60.0" y2="435" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="500" x2="60.0" y2="515" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
+    <line x1="60.0" y1="580" x2="60.0" y2="595" stroke="#3A6B1F" stroke-width="2" opacity="0.7" marker-end="url(#arrowhead-grain)" />
     
     <!-- Visual elevation direction indicators (uphill/downhill) -->
-    <line x1="40.0" y1="140" x2="40.0" y2="150" stroke="#4FC3F7" stroke-width="1.5" opacity="0.80" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="260" x2="40.0" y2="270" stroke="#4FC3F7" stroke-width="1.5" opacity="0.80" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="380" x2="40.0" y2="390" stroke="#4FC3F7" stroke-width="1.5" opacity="0.80" marker-end="url(#arrowhead-elev-down)" />
-    <line x1="40.0" y1="500" x2="40.0" y2="510" stroke="#4FC3F7" stroke-width="1.5" opacity="0.80" marker-end="url(#arrowhead-elev-down)" />
-    <text x="40.0" y="125" font-family="Arial, sans-serif" font-size="6" fill="#4FC3F7" text-anchor="middle" font-weight="bold" opacity="0.9">▼ 2.0%</text>
+    <line x1="40.0" y1="140" x2="40.0" y2="150" stroke="#4FC3F7" stroke-width="1.5" opacity="0.72" marker-end="url(#arrowhead-elev-down)" />
+    <line x1="40.0" y1="260" x2="40.0" y2="270" stroke="#4FC3F7" stroke-width="1.5" opacity="0.72" marker-end="url(#arrowhead-elev-down)" />
+    <line x1="40.0" y1="380" x2="40.0" y2="390" stroke="#4FC3F7" stroke-width="1.5" opacity="0.72" marker-end="url(#arrowhead-elev-down)" />
+    <line x1="40.0" y1="500" x2="40.0" y2="510" stroke="#4FC3F7" stroke-width="1.5" opacity="0.72" marker-end="url(#arrowhead-elev-down)" />
+    <text x="40.0" y="125" font-family="Arial, sans-serif" font-size="6" fill="#4FC3F7" text-anchor="middle" font-weight="bold" opacity="0.9">▼ 1.5%</text>
     
     <!-- Target line (straight line to hole) -->
     <line x1="60.0" 
@@ -114,7 +114,7 @@
           opacity="0.5" />
     
     <!-- Putt path (break line) -->
-    <path d="M 60.0 630.0 C 61.6 617.5, 63.2 604.6, 64.8 592.0 C 66.3 577.0, 67.9 561.5, 69.5 546.5 C 70.5 533.9, 71.6 521.0, 72.6 508.5 C 73.6 493.4, 74.5 477.9, 75.4 462.9 C 76.0 447.9, 76.6 432.4, 77.1 417.3 C 77.4 404.8, 77.6 391.9, 77.8 379.4 C 77.7 364.3, 77.6 348.8, 77.5 333.8 C 77.1 318.8, 76.7 303.3, 76.2 288.2 C 75.6 275.7, 75.0 262.8, 74.3 250.3 C 73.3 235.2, 72.3 219.7, 71.3 204.7 C 70.2 189.6, 69.2 174.2, 68.2 159.1 C 67.3 146.6, 66.5 133.7, 65.7 121.1 C 64.7 106.1, 63.7 90.6, 62.8 75.6 C 61.9 60.5, 60.9 45.0, 60.0 30.0" 
+    <path d="M 60.0 630.0 C 60.3 617.5, 60.6 604.6, 60.8 592.0 C 61.0 577.0, 61.2 561.5, 61.4 546.5 C 61.5 533.9, 61.5 521.0, 61.6 508.5 C 61.5 493.4, 61.4 477.9, 61.4 462.9 C 61.2 447.9, 60.9 432.4, 60.7 417.3 C 60.5 404.8, 60.4 391.9, 60.2 379.4 C 60.0 364.3, 59.8 348.8, 59.6 333.8 C 59.5 318.8, 59.4 303.3, 59.3 288.2 C 59.2 275.7, 59.1 262.8, 59.1 250.3 C 59.0 235.2, 59.0 219.7, 59.0 204.7 C 59.0 189.6, 59.0 174.2, 59.0 159.1 C 59.1 146.6, 59.1 133.7, 59.2 121.1 C 59.3 106.1, 59.4 90.6, 59.5 75.6 C 59.7 60.5, 59.8 45.0, 60.0 30.0" 
           stroke="#FFD700" 
           stroke-width="3" 
           fill="none" 
@@ -127,18 +127,18 @@
     <rect x="3" y="498.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="508.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 1</text>
     <rect x="33.0" y="512.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="524.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">4.2% R->L</text>
+    <text x="60.0" y="524.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">1.8% R->L</text>
     <rect x="3" y="278.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="288.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 2</text>
     <rect x="33.0" y="292.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="304.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">4.2% R->L</text>
+    <text x="60.0" y="304.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">0.6% L->R</text>
     <rect x="3" y="88.0" width="28" height="14" fill="#1A1A1A" rx="2" />
     <text x="17" y="98.0" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF" text-anchor="middle" font-weight="bold">SEC 3</text>
     <rect x="33.0" y="102.0" width="54" height="16" fill="#1A1A1A" rx="3" stroke="#FFD700" stroke-width="1.5" />
-    <text x="60.0" y="114.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">0.4% L->R</text>
+    <text x="60.0" y="114.0" font-family="Arial, sans-serif" font-size="9" fill="#FFD700" text-anchor="middle" font-weight="bold">0.6% L->R</text>
     
     <!-- AimPoint marker - pink circle showing starting aim line (~2ft from ball) -->
-    <circle cx="72.64223519504414" 
+    <circle cx="61.59016459572806" 
             cy="522" 
             r="4" 
             fill="#FF6B6B" 
@@ -147,7 +147,7 @@
             stroke-width="1" />
     
     <!-- AimPoint marker - pink circle showing aim point near hole (same x position) -->
-    <circle cx="72.64223519504414" 
+    <circle cx="61.59016459572806" 
             cy="50" 
             r="4" 
             fill="#FF6B6B" 
@@ -156,7 +156,7 @@
             stroke-width="1" />
     
     <!-- AimPoint display - above hole -->
-    <text x="60.0" y="12" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" text-anchor="middle" font-weight="bold">AimPoint: 3</text>
+    <text x="60.0" y="12" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" text-anchor="middle" font-weight="bold">AimPoint: 0</text>
     
     <!-- Hole with grain shading on edge -->
     <circle cx="60.0" 
@@ -196,37 +196,37 @@
     <rect x="120" y="0" width="300" height="660" fill="#1A1A1A" opacity="0.95" />
     <rect x="123" y="3" width="294" height="654" fill="#000000" opacity="0.9" rx="4" stroke="#FFD700" stroke-width="2" />
     <text x="128" y="22" font-family="Arial, sans-serif" font-size="12" fill="#FFD700" font-weight="bold">AIMPOINT ANALYSIS</text>
-    <text x="128" y="44" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Slope (adj): 2.9%  |  Dir: R->L</text>
-    <text x="128" y="59" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">AimPoint: 3 fingers (R->L break)</text>
-    <text x="128" y="74" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Elevation: DOWNHILL 2.0%</text>
-    <text x="128" y="89" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Grain: WITH (fast/shiny)</text>
+    <text x="128" y="44" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Slope (adj): 0.2%  |  Dir: R->L</text>
+    <text x="128" y="59" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">AimPoint: 0 fingers (R->L break)</text>
+    <text x="128" y="74" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Elevation: DOWNHILL 1.5%</text>
+    <text x="128" y="89" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Grain: AGAINST (slow/dark)</text>
     <text x="128" y="106" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">SECTION SLOPES:</text>
-    <text x="128" y="125" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 1: 4.2% R to L</text>
-    <text x="134" y="140" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Start section (0-3.3ft): 4.2% R to L slope</text>
-    <text x="128" y="155" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 2: 4.2% R to L</text>
-    <text x="134" y="170" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Middle section (3.3-6.6ft): 4.2% R to L slope</text>
-    <text x="128" y="185" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 3: 0.4% L to R</text>
-    <text x="134" y="200" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Hole section (6.6-10ft): 0.4% L to R slope</text>
+    <text x="128" y="125" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 1: 1.8% R to L</text>
+    <text x="134" y="140" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Start section (0-3.3ft): 1.8% R to L slope</text>
+    <text x="128" y="155" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 2: 0.6% L to R</text>
+    <text x="134" y="170" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Middle section (3.3-6.6ft): 0.6% L to R slope</text>
+    <text x="128" y="185" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Sec 3: 0.6% L to R</text>
+    <text x="134" y="200" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Hole section (6.6-10ft): 0.6% L to R slope</text>
     <text x="128" y="217" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">GRAIN &amp; BREAK:</text>
-    <text x="132" y="236" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">WITH grain the ball rolls faster and looks shiny (you see blade</text>
-    <text x="132" y="250" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">tops reflecting light). The ball holds speed longer so it breaks</text>
-    <text x="132" y="264" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">LESS in the first half. But as it dies near the hole, break</text>
-    <text x="132" y="278" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">increases sharply - the slow-rolling ball curves hard at the end.</text>
-    <text x="132" y="292" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">Play MORE break than the slope suggests.</text>
+    <text x="132" y="236" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">AGAINST grain the ball rolls slower and looks dark/dull (you are</text>
+    <text x="132" y="250" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">looking into the blades). The ball loses speed faster so the</text>
+    <text x="132" y="264" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">slope pulls it sideways sooner. Break happens throughout the</text>
+    <text x="132" y="278" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">entire putt, not just at the end. Hit FIRMER to maintain speed</text>
+    <text x="132" y="292" font-family="Arial, sans-serif" font-size="9" fill="#CCCCCC">and play LESS break than the slope suggests.</text>
     <text x="128" y="310" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">AIMPOINT FEEL:</text>
-    <text x="132" y="329" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Stand at the midpoint facing the hole. You will feel heavy</text>
-    <text x="132" y="343" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">pressure on your LEFT foot (strong tilt). High side: right. Ball</text>
+    <text x="132" y="329" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">Stand at the midpoint facing the hole. You will feel slight</text>
+    <text x="132" y="343" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">pressure on your LEFT foot (subtle tilt). High side: right. Ball</text>
     <text x="132" y="357" font-family="Arial, sans-serif" font-size="9" fill="#FFFFFF">falls to the left.</text>
-    <text x="132" y="371" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Lean FORWARD slightly (2.0% downhill). Hit softer - ball breaks more</text>
+    <text x="132" y="371" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Lean FORWARD slightly (1.5% downhill). Hit softer - ball breaks more</text>
     <text x="132" y="385" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">because it moves slower across the slope.</text>
     <text x="128" y="403" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">ELEVATION &amp; BREAK:</text>
-    <text x="132" y="422" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Downhill 2.0% means MORE break. You hit softer so the ball rolls slower</text>
+    <text x="132" y="422" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Downhill 1.5% means MORE break. You hit softer so the ball rolls slower</text>
     <text x="132" y="436" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">across the side slope, giving gravity more time to pull it sideways. This</text>
-    <text x="132" y="450" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">2.7% slope plays as 2.9% effective (vs 2.7% on flat).</text>
+    <text x="132" y="450" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">0.2% slope plays as 0.2% effective (vs 0.2% on flat).</text>
     <text x="128" y="468" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">QUICK TIPS:</text>
     <text x="132" y="487" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">1. Feel the slope with your feet at the midpoint.</text>
-    <text x="132" y="501" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">2. Aim 3 fingers to the right (high side).</text>
-    <text x="132" y="515" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">3. With grain: expect late break near the hole.</text>
+    <text x="132" y="501" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">2. Aim 0 fingers to the right (high side).</text>
+    <text x="132" y="515" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">3. Against grain: hit firmer, less total break.</text>
     <text x="132" y="529" font-family="Arial, sans-serif" font-size="8" fill="#FFFFFF">4. Watch for break changes (marked on green)!</text>
     <text x="128" y="547" font-family="Arial, sans-serif" font-size="11" fill="#FFD700" font-weight="bold">SEEING GRAIN:</text>
     <text x="132" y="566" font-family="Arial, sans-serif" font-size="8" fill="#CCCCCC">Use adjustable-tint sunglasses to read grain. Start at medium tint behind</text>
